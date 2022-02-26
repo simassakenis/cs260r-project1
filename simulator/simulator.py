@@ -59,10 +59,12 @@ class Input:
 
 def scheduler(logical_nodes):
     #TODO
+    pass
 
 
 def failure(logical_nodes):
     #TODO
+    pass
 
 
 def simulator(logical_nodes):
@@ -81,8 +83,7 @@ def simulator(logical_nodes):
                     and max(logical_node.input_q) <= current_timestamp):
                     logical_node.state = 'computing'
                     input_sz = sum([inp.data_size for inp in logical_node.input_q])
-                    logical_node.computation_timestamp =
-                        (current_timestamp
+                    logical_node.computation_timestamp = (current_timestamp
                          + logical_node.computation_length(input_sz))
 
             if logical_node.state == 'computing':
