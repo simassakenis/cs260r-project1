@@ -9,12 +9,28 @@
 # timestep, the simulator observes the current state of the
 # system and determines the next state.
 
+from enum import Enum
+
+# Logical Node state enum
+class LogicalNodeState(Enum):
+    NOT_SCHEDULED = 1
+    WAITING_FOR_INPUTS = 2
+    COMPUTING = 3
+    COMPLETED = 4
+
+# Logical Node state enum
+class PhysicalNodeState(Enum):
+    NOT_SCHEDULED = 1
+    WAITING_FOR_INPUTS = 2
+    COMPUTING = 3
+    COMPLETED = 4
+    Failed = 5
 
 class LogicalNode:
     def __init__(self, number_of_inputs=None, computation_length=None,
                  output_size=None, computation_timestamp=None, phys_node=None,
                  input_q=[], in_neighbors=[], out_neighbors=[],
-                 state='not scheduled'):
+                 state=LogicalNodeState.NOT_SCHEDULED):
         self.number_of_inputs = number_of_inputs
         self.computation_length = computation_length
         self.output_size = output_size
@@ -23,6 +39,14 @@ class LogicalNode:
         self.input_q = input_q
         self.in_neighbors = in_neighbors
         self.out_neighbors = out_neighbors
+        self.state = state
+
+class PhysicalNode:
+    def __init__(self, compute_power=None, memory=None,
+                 bandwidth=None, state=PhysicalNodeState.NOT_SCHEDULED):
+        self.compute_power = compute_power
+        self.memory = memory
+        self.bandwidth = bandwidth
         self.state = state
 
 
