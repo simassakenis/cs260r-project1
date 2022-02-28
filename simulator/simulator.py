@@ -68,7 +68,7 @@ class Input:
         self.source_node = source_node
 
 
-def scheduler(logical_nodes):
+def scheduler(logical_nodes, physical_nodes):
     #TODO
     pass
 
@@ -78,13 +78,13 @@ def failure(logical_nodes):
     pass
 
 
-def simulator(logical_nodes):
+def simulator(logical_nodes, physical_nodes):
     '''
         
     '''
     current_timestamp = 0
     while True:
-        new_logical_to_physical_assignments = scheduler(logical_nodes)
+        new_logical_to_physical_assignments = scheduler(logical_nodes, physical_node)
         for logical_node, physical_node in new_logical_to_physical_assignments:
             assert logical_node.state == 'not scheduled'
             logical_node.phys_node = physical_node
