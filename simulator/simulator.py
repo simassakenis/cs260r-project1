@@ -11,12 +11,16 @@
 
 from enum import Enum
 
+logical_node_count = 0
+physical_node_count = 0
+
 # Logical Node state enum
 class LogicalNodeState(Enum):
     NOT_SCHEDULED = 1
     WAITING_FOR_INPUTS = 2
     COMPUTING = 3
     COMPLETED = 4
+    FAILED = 5
 
 # Logical Node state enum
 class PhysicalNodeState(Enum):
@@ -31,6 +35,9 @@ class LogicalNode:
                 output_size=None, computation_timestamp=None, phys_node=None,
                 input_q=None, in_neighbors=None, out_neighbors=None,
                 state=LogicalNodeState.NOT_SCHEDULED):
+        global logical_node_count
+        self.node_id = logical_node_count
+        logical_node_count += 1
         self.number_of_inputs = number_of_inputs
         self.computation_length = computation_length
         self.output_size = output_size
@@ -43,10 +50,14 @@ class LogicalNode:
 
 class PhysicalNode:
     def __init__(self, compute_power=None, memory=None,
-                bandwidth=None, state=PhysicalNodeState.NOT_SCHEDULED):
+                bandwidth=None, current_logical_node=None, state=PhysicalNodeState.NOT_SCHEDULED):
+        global physical_node_count
+        self.node_id = physical_node_count
+        physical_node_count += 1
         self.compute_power = compute_power
         self.memory = memory
         self.bandwidth = bandwidth
+        self.current_logical_node = current_logical_node
         self.state = state
 
 
