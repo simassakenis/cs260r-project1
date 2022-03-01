@@ -51,7 +51,7 @@ class LogicalNode:
         return self.state is LogicalNodeState.NOT_SCHEDULED or self.state is LogicalNodeState.FAILED
     
     def is_all_input_present(self):
-        return len(self.input_q) == self.number_of_inputs
+        return len(self.input_q) == self.number_of_inputs and None not in self.input_q
 
 class PhysicalNode:
     def __init__(self, compute_power=None, memory=None,
@@ -95,26 +95,32 @@ def simulator(logical_nodes, physical_nodes):
     while True:
         new_logical_to_physical_assignments = scheduler(logical_nodes, physical_node)
         for logical_node, physical_node in new_logical_to_physical_assignments:
-            assert logical_node.state == 'not scheduled'
+            assert logical_node.state is LogicalNodeState.NOT_SCHEDULED
             logical_node.phys_node = physical_node
-            logical_node.input_q = None #TODO (update input_q timestamps)
-            logical_node.state = 'waiting for inputs'
+            # TODO: update input_q timestamps
+            for inp in logical_node.input_q:
+                inp.timestamp = current_timestamp + int(inp.data_size / physical_node.bandwidth)
+            logical_node.state = LogicalNodeState.WAITING_FOR_INPUTS
+            physical_node.current_logical_node = logical_node
 
         for logical_node in logical_nodes:
-            if logical_node.state == 'waiting for inputs':
+            if logical_node.state is LogicalNodeState.WAITING_FOR_INPUTS:
                 if (len(logical_node.input_q) == logical_node.number_of_inputs
-                    and max(logical_node.input_q) <= current_timestamp):
-                    logical_node.state = 'computing'
+                    and max([inp.timestamp for inp in logical_node.input_q]) <= current_timestamp):
+                    logical_node.state = LogicalNodeState.COMPUTING
                     input_sz = sum([inp.data_size for inp in logical_node.input_q])
                     logical_node.computation_timestamp = (current_timestamp
-                        + logical_node.computation_length(input_sz))
+                        + logical_node.computation_length)
 
-            if logical_node.state == 'computing':
+            if logical_node.state is LogicalNodeState.COMPUTING:
                 if logical_node.computation_timestamp == current_timestamp:
+                    logical_node.state = LogicalNodeState.COMPLETED
                     #TODO: add outputs to the input queues of out-neighbors
-                    logical_node.state = 'completed'
+                    for out_node in logical_node.out_neighbors:
+                        inp = Input(data_size=logical_node.output_size, timestamp=None, source_node=logical_node)
+                        out_node.input_q.append(inp)
 
-        if all([logical_node.state == 'completed'
+        if all([logical_node.state is LogicalNodeState.COMPLETED
                 for logical_node in logical_nodes]):
             return current_timestamp
 
@@ -122,7 +128,7 @@ def simulator(logical_nodes, physical_nodes):
         for logical_node in failed_nodes:
             assert logical_node.state in ['waiting for inputs', 'computing']
             #TODO: (potentially) reset some fields of logical_node
-            logical_node.state = 'not scheduled'
+            logical_node.state = LogicalNodeState.FAILED
 
         current_timestamp += 1
 

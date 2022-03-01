@@ -1,5 +1,5 @@
 import unittest
-from simulator.simulator import LogicalNode, PhysicalNode, LogicalNodeState, PhysicalNodeState
+from simulator.simulator import LogicalNode, PhysicalNode, LogicalNodeState, PhysicalNodeState, Input
 from simulator.simplequeuescheduler import SimpleQueueScheduler
 from tests.helperfunctions import HelperFunctions
 
@@ -44,6 +44,7 @@ class TestSimpleQueueScheduler(unittest.TestCase):
 
         for sp in scheduled_pairs:
             print('logical node: ', sp[0].node_id, 'physical node: ', sp[1].node_id)
+            sp[0].state = LogicalNodeState.COMPUTING
         
         self.assertEqual(len(scheduled_pairs), 1)
         self.assertEqual(scheduled_pairs[0][0].node_id, map_nodes[0].node_id)
@@ -51,12 +52,15 @@ class TestSimpleQueueScheduler(unittest.TestCase):
 
         # marking first logical node as completed
         logical_nodes[0].state = LogicalNodeState.COMPLETED
+        for out_node in logical_nodes[0].out_neighbors:
+            out_node.input_q.append(Input(1, 0, logical_nodes[0]))
 
         # test the scheduler
         scheduled_pairs = SimpleQueueScheduler.schedule(logical_nodes, physical_nodes)
 
         for sp in scheduled_pairs:
             print('logical node: ', sp[0].node_id, 'physical node: ', sp[1].node_id)
+            sp[0].state = LogicalNodeState.COMPUTING
         
         self.assertEqual(len(scheduled_pairs), 1)
         self.assertEqual(scheduled_pairs[0][0].node_id, reduce_nodes[0].node_id)
@@ -99,12 +103,27 @@ class TestSimpleQueueScheduler(unittest.TestCase):
 
         for sp in scheduled_pairs:
             print('logical node: ', sp[0].node_id, 'physical node: ', sp[1].node_id)
+            sp[0].state = LogicalNodeState.COMPUTING
 
-        self.assertEqual(len(scheduled_pairs), 2)
+        self.assertEqual(len(scheduled_pairs), 1)
         self.assertEqual(scheduled_pairs[0][0].node_id, map_nodes[0].node_id)
         self.assertEqual(scheduled_pairs[0][1].node_id, physical_nodes[0].node_id)
-        self.assertEqual(scheduled_pairs[1][0].node_id, reduce_nodes[0].node_id)
-        self.assertEqual(scheduled_pairs[1][1].node_id, physical_nodes[1].node_id)
+
+        # marking first logical node as completed
+        logical_nodes[0].state = LogicalNodeState.COMPLETED
+        for out_node in logical_nodes[0].out_neighbors:
+            out_node.input_q.append(Input(1, 0, logical_nodes[0]))
+
+        # test the scheduler
+        scheduled_pairs = SimpleQueueScheduler.schedule(logical_nodes, physical_nodes)
+
+        for sp in scheduled_pairs:
+            print('logical node: ', sp[0].node_id, 'physical node: ', sp[1].node_id)
+            sp[0].state = LogicalNodeState.COMPUTING
+        
+        self.assertEqual(len(scheduled_pairs), 1)
+        self.assertEqual(scheduled_pairs[0][0].node_id, reduce_nodes[0].node_id)
+        self.assertEqual(scheduled_pairs[0][1].node_id, physical_nodes[0].node_id)
         
     
     def test_simple_queue_scheduler_3(self):
@@ -144,12 +163,41 @@ class TestSimpleQueueScheduler(unittest.TestCase):
 
         for sp in scheduled_pairs:
             print('logical node: ', sp[0].node_id, 'physical node: ', sp[1].node_id)
+            sp[0].state = LogicalNodeState.COMPUTING
 
         self.assertEqual(len(scheduled_pairs), 2)
         self.assertEqual(scheduled_pairs[0][0].node_id, map_nodes[0].node_id)
         self.assertEqual(scheduled_pairs[0][1].node_id, physical_nodes[0].node_id)
         self.assertEqual(scheduled_pairs[1][0].node_id, map_nodes[1].node_id)
         self.assertEqual(scheduled_pairs[1][1].node_id, physical_nodes[1].node_id)
+
+         # marking first logical node as completed
+        logical_nodes[0].state = LogicalNodeState.COMPLETED
+        for out_node in logical_nodes[0].out_neighbors:
+            out_node.input_q.append(Input(1, 0, logical_nodes[0]))
+
+        scheduled_pairs = SimpleQueueScheduler.schedule(logical_nodes, physical_nodes)
+
+        for sp in scheduled_pairs:
+            print('logical node: ', sp[0].node_id, 'physical node: ', sp[1].node_id)
+            sp[0].state = LogicalNodeState.COMPUTING
+        
+        self.assertEqual(len(scheduled_pairs), 0)
+
+        logical_nodes[1].state = LogicalNodeState.COMPLETED
+        for out_node in logical_nodes[1].out_neighbors:
+            out_node.input_q.append(Input(1, 0, logical_nodes[1]))
+
+        scheduled_pairs = SimpleQueueScheduler.schedule(logical_nodes, physical_nodes)
+
+        for sp in scheduled_pairs:
+            print('logical node: ', sp[0].node_id, 'physical node: ', sp[1].node_id)
+            sp[0].state = LogicalNodeState.COMPUTING
+        
+        self.assertEqual(len(scheduled_pairs), 1)
+
+        self.assertEqual(scheduled_pairs[0][0].node_id, reduce_nodes[0].node_id)
+        self.assertEqual(scheduled_pairs[0][1].node_id, physical_nodes[0].node_id)
         
 
 if __name__ == '__main__':
