@@ -1,4 +1,4 @@
-from simulator.simulator import LogicalNode, PhysicalNode, LogicalNodeState, PhysicalNodeState
+from simulator.nodes import LogicalNode, PhysicalNode, LogicalNodeState, PhysicalNodeState
 
 class SimpleQueueScheduler:
     @staticmethod
