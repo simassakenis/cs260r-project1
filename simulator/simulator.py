@@ -100,7 +100,7 @@ class Input:
         self.timestamp = timestamp
         self.source = source
     # Update the timestamp of this input to arrive at the physical node pnode
-    def update_time(pnode):
+    def update_time(self, pnode):
         self.timestamp = time_delta(self.size * bandwidth(self.source, pnode))
 
 def scheduler(logical_nodes, physical_nodes):
