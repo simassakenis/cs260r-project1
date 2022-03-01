@@ -28,7 +28,7 @@ class PhysicalNodeState(Enum):
     WAITING_FOR_INPUTS = 2
     COMPUTING = 3
     COMPLETED = 4
-    Failed = 5
+    FAILED = 5
 
 class LogicalNode:
     def __init__(self, number_of_inputs=None, computation_length=None,
@@ -47,6 +47,11 @@ class LogicalNode:
         self.in_neighbors = in_neighbors if in_neighbors is not None else []
         self.out_neighbors = out_neighbors if out_neighbors is not None else []
         self.state = state
+    def can_be_scheduled(self):
+        return self.state is LogicalNodeState.NOT_SCHEDULED or self.state is LogicalNodeState.FAILED
+    
+    def is_all_input_present(self):
+        return len(self.input_q) == self.number_of_inputs
 
 class PhysicalNode:
     def __init__(self, compute_power=None, memory=None,
@@ -59,6 +64,10 @@ class PhysicalNode:
         self.bandwidth = bandwidth
         self.current_logical_node = current_logical_node
         self.state = state
+    
+    def can_be_scheduled(self):
+        return self.state is PhysicalNodeState.NOT_SCHEDULED
+
 
 
 class Input:

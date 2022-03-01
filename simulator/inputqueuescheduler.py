@@ -1,6 +1,6 @@
 from simulator.simulator import LogicalNode, PhysicalNode, LogicalNodeState, PhysicalNodeState
 
-class SimpleQueueScheduler:
+class InputQueueScheduler:
     @staticmethod
     def schedule(logical_nodes: list[LogicalNode], physical_nodes: list[PhysicalNode]):
         '''
@@ -9,8 +9,8 @@ class SimpleQueueScheduler:
             physical_nodes: list of physical nodes to schedule to
         '''
 
-        # List of all logical nodes not scheduled and failed
-        remaining_logical_nodes = list(filter(lambda x: x.can_be_scheduled(), logical_nodes))
+        # List of all logical nodes not scheduled and failed and also have all the input data
+        remaining_logical_nodes = list(filter(lambda x: x.can_be_scheduled() and x.is_all_input_present(), logical_nodes))
         
         # List of all physical nodes not scheduled
         remaining_physical_nodes = list(filter(lambda x: x.can_be_scheduled(), physical_nodes))
