@@ -10,72 +10,98 @@
 # system and determines the next state.
 
 from simulator.simplequeuescheduler import SimpleQueueScheduler
-from simulator.nodes import LogicalNode, PhysicalNode, Input, LogicalNodeState, PhysicalNodeState
+from simulator.nodes import LogicalNode, PhysicalNode, Input, LogicalNodeState
 import logging
 
+# Implemented as a class for cross-file imports (and so it can be abstracted)
 
-def scheduler(logical_nodes, physical_nodes):
-    #TODO
-    return SimpleQueueScheduler.schedule(logical_nodes, physical_nodes)
+class Timer:
+    def __init__(self):
+        self.time = 0
 
+    # Step forward once in time
+    def time_step(self):
+        self.time += 1
 
-def failure(logical_nodes):
+    # Has `time` already passed?
+    def time_passed(self, time):
+        return time <= self.time
+
+    # Return the current timestamp plus `delta` time (will be useful later to
+    # implement jumps forward)
+    def time_delta(self, delta):
+        end = self.time + delta
+        # if end < self.interesting_time:
+        #    self.interesting_time = end
+        return end
+
+    # Get the current time
+    def get_time(self):
+        return self.time
+
+def scheduler(lnodes, pnodes):
+    return SimpleQueueScheduler.schedule(lnodes, pnodes)
+
+def failure(pnodes):
     #TODO
     return []
 
-
-def simulate(logical_nodes, physical_nodes):
-    '''
-        
-    '''
-    current_timestamp = 0
+def simulator(lnodes, pnodes):
+    Timer timer
     while True:
-        print('Current timestamp: ', current_timestamp)
-        new_logical_to_physical_assignments = SimpleQueueScheduler.schedule(logical_nodes, physical_nodes)
-        for logical_node, physical_node in new_logical_to_physical_assignments:
-            assert logical_node.state is LogicalNodeState.NOT_SCHEDULED
-            print('Assigning logical node {} to physical node {}. Waiting for inputs'.format(logical_node.node_id, physical_node.node_id))
-            logical_node.phys_node = physical_node
-            # TODO: update input_q timestamps
-            for inp in logical_node.input_q:
-                inp.timestamp = current_timestamp + int(inp.data_size / physical_node.bandwidth)
-            logical_node.state = LogicalNodeState.WAITING_FOR_INPUTS
-            physical_node.current_logical_node = logical_node
-            physical_node.state = PhysicalNodeState.COMPUTING
+        print('Current time: ', timer.get_time())
+        node_assignments = scheduler(lnodes, pnodes)
+        for lnode, pnode in node_assignments:
+            assert lnode.schedulable()
+            assert pnode.schedulable()
+            print('Assigned logical node {} to physical node {}; now waiting'
+                  .format(lnode.id, pnode.id))
+            lnode.pnode = pnode
+            pnode.lnode = lnode
+            for inp in lnode.input_q:
+                if inp.timestamp == None:
+                    inp.update_time(timer, pnode)
+            lnode.state = LogicalNodeState.NEED_INPUT
 
-        for logical_node in logical_nodes:
-            if logical_node.state is LogicalNodeState.WAITING_FOR_INPUTS:
-                if (len(logical_node.input_q) == logical_node.number_of_inputs
-                    and max([inp.timestamp for inp in logical_node.input_q]) <= current_timestamp):
-                    print('Logical node {} received all inputs and is computing.'.format(logical_node.node_id))
-                    logical_node.state = LogicalNodeState.COMPUTING
-                    input_sz = sum([inp.data_size for inp in logical_node.input_q])
-                    logical_node.computation_timestamp = (current_timestamp
-                        + logical_node.computation_length)
+        for lnode in lnodes:
+            done = True
+            if lnode.state == LogicalNodeState.NEED_INPUT:
+                if (lnode.inputs_present() and
+                    all([timer.time_passed(inp.timestamp) for inp in lnode.input_q])):
+                    print('Logical node {} now computing'.format(lnode.id))
+                    lnode.input_size = sum([inp.size for inp in lnode.input_q])
+                    lnode.comp_finish_time =
+                        timer.time_delta(lnode.comp_length(lnode.input_size))
+                    lnode.state = LogicalNodeState.COMPUTING
 
-            if logical_node.state is LogicalNodeState.COMPUTING:
-                if logical_node.computation_timestamp == current_timestamp:
-                    print('Logical node {} is done computing'.format(logical_node.node_id))
-                    logical_node.state = LogicalNodeState.COMPLETED
-                    physical_node.state = PhysicalNodeState.NOT_SCHEDULED
-                    #TODO: add outputs to the input queues of out-neighbors
-                    for out_node in logical_node.out_neighbors:
-                        inp = Input(data_size=logical_node.output_size, timestamp=None, source_node=logical_node)
-                        out_node.input_q.append(inp)
+            if lnode.state == LogicalNodeState.COMPUTING:
+                if timer.time_passed(lnode.comp_finish_time):
+                    print('Logical node {} finished computing'.format(lnode.id))
+                    for node in lnode.out_neighbors:
+                        inp = Input(lnode.output_size(lnode.input_size), None,
+                                    lnode.pnode)
+                        if node.pnode is not None:
+                            inp.update_time(timer, node.pnode)
+                        node.input_q.push(inp)
+                    lnode.pnode.lnode = None
+                    lnode.state = LogicalNodeState.COMPLETED
 
-        if all([logical_node.state is LogicalNodeState.COMPLETED
-                for logical_node in logical_nodes]):
-            return current_timestamp
+            if lnode.state != LogicalNodeState.COMPLETED:
+                done = False
 
-        failed_nodes = failure(logical_nodes)
-        for logical_node in failed_nodes:
-            assert logical_node.state in ['waiting for inputs', 'computing']
-            #TODO: (potentially) reset some fields of logical_node
-            logical_node.state = LogicalNodeState.FAILED
+        if done:
+            return timer.get_time()
 
-        current_timestamp += 1
+        failed_nodes = failure(pnodes)
+        for pnode in failed_nodes:
+            if pnode.lnode is not None:
+                pnode.lnode.state = LogicalNodeState.FAILED
+            pnode.failed = True
+
+        timer.time_step()
 
 
 # if __name__ == '__main__':
-#     logical_nodes = #TODO (create logical graph)
-#     execution_time = simulator(logical_nodes)
+#     lnodes = # TODO (create logical graph)
+#     pnodes = # TODO (make physical node list)
+#     execution_time = simulate(lnodes, pnodes)
