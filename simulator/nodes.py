@@ -1,5 +1,6 @@
-from simulator.simulator import Timer
+from simulator.timer import Timer
 from enum import Enum
+import random
 
 # Constants that should later be configurable
 
@@ -38,6 +39,10 @@ def straggler_time(size):
 
 def default_comp_length(size):
     global COMP_LENGTH_MULTIPLIER
+    return COMP_LENGTH_MULTIPLIER * size
+
+def comp_length_with_straggler(size):
+    global COMP_LENGTH_MULTIPLIER
     return COMP_LENGTH_MULTIPLIER * size + straggler_time(size)
 
 def default_output_size(size):
@@ -66,8 +71,7 @@ class LogicalNode:
 
     # Can this logical node be scheduled?
     def schedulable(self):
-        return self.state == LogicalNodeState.NOT_SCHEDULED
-            or self.state == LogicalNodeState.FAILED
+        return self.state is LogicalNodeState.NOT_SCHEDULED or self.state is LogicalNodeState.FAILED
 
     # Are all the inputs present for this logical node (not necessarily arrived)
     def inputs_present(self):

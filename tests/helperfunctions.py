@@ -41,9 +41,7 @@ class HelperFunctions:
             map_output_range: range of output size for map nodes
         '''
         logical_map_node = LogicalNode(
-            number_of_inputs=1, 
-            computation_length=random.randrange(map_computation_range[0],map_computation_range[1]), 
-            output_size=random.randrange(map_output_range[0],map_output_range[1]),
+            ninputs=1,
             input_q = [Input(1,0, None)])
         return logical_map_node
 
@@ -69,9 +67,7 @@ class HelperFunctions:
             reduce_output_range: range of output size for reduce nodes
             map_nodes: list of map nodes
         '''
-        logical_reduce_node = LogicalNode(
-            computation_length=random.randrange(reduce_computation_range[0],reduce_computation_range[1]), 
-            output_size=random.randrange(reduce_output_range[0],reduce_output_range[1]))
+        logical_reduce_node = LogicalNode()
         return logical_reduce_node
     
     @staticmethod
@@ -102,7 +98,7 @@ class HelperFunctions:
             # randomly connect to map nodes
             selected_map_nodes = random.sample(map_nodes, int(connection_ratio * len(map_nodes)))
             rNode.in_neighbors = selected_map_nodes
-            rNode.number_of_inputs = len(selected_map_nodes)
+            rNode.ninputs = len(selected_map_nodes)
             for mNode in selected_map_nodes:
                 mNode.out_neighbors.append(rNode)
                 # should we modify output size of map node?

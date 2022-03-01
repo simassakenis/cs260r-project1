@@ -1,4 +1,4 @@
-from simulator.nodes import LogicalNode, PhysicalNode, LogicalNodeState, PhysicalNodeState
+from simulator.nodes import LogicalNode, PhysicalNode, LogicalNodeState
 
 class SimpleQueueScheduler:
     @staticmethod
@@ -10,10 +10,10 @@ class SimpleQueueScheduler:
         '''
 
         # List of all logical nodes not scheduled and failed with all inputs present
-        remaining_logical_nodes = list(filter(lambda x: x.can_be_scheduled() and x.is_all_input_present(), logical_nodes))
+        remaining_logical_nodes = list(filter(lambda x: x.schedulable() and x.inputs_present(), logical_nodes))
         
         # List of all physical nodes not scheduled
-        remaining_physical_nodes = list(filter(lambda x: x.can_be_scheduled(), physical_nodes))
+        remaining_physical_nodes = list(filter(lambda x: x.schedulable(), physical_nodes))
 
         # list of scheduled pairs (logical_node, physical_node)
         scheduled_pairs = []
@@ -46,6 +46,6 @@ class SimpleQueueScheduler:
             physical_node: physical node to score
         '''
         # For now do a very simple score. Later check for spec compatibility, bandwidth, and localization
-        if(physical_node.state == PhysicalNodeState.NOT_SCHEDULED):
+        if(physical_node.schedulable()):
             return 1
         return -1

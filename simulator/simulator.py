@@ -11,33 +11,9 @@
 
 from simulator.simplequeuescheduler import SimpleQueueScheduler
 from simulator.nodes import LogicalNode, PhysicalNode, Input, LogicalNodeState
+from simulator.timer import Timer
 import logging
 
-# Implemented as a class for cross-file imports (and so it can be abstracted)
-
-class Timer:
-    def __init__(self):
-        self.time = 0
-
-    # Step forward once in time
-    def time_step(self):
-        self.time += 1
-
-    # Has `time` already passed?
-    def time_passed(self, time):
-        return time <= self.time
-
-    # Return the current timestamp plus `delta` time (will be useful later to
-    # implement jumps forward)
-    def time_delta(self, delta):
-        end = self.time + delta
-        # if end < self.interesting_time:
-        #    self.interesting_time = end
-        return end
-
-    # Get the current time
-    def get_time(self):
-        return self.time
 
 def scheduler(lnodes, pnodes):
     return SimpleQueueScheduler.schedule(lnodes, pnodes)
@@ -46,7 +22,7 @@ def failure(pnodes):
     #TODO
     return []
 
-def simulator(lnodes, pnodes):
+def simulate(lnodes, pnodes):
     timer = Timer()
     while True:
         print('Current time: ', timer.get_time())
@@ -80,7 +56,7 @@ def simulator(lnodes, pnodes):
                         inp = Input(lnode.output_size(lnode.input_size), None, lnode.pnode)
                         if node.pnode is not None:
                             inp.update_time(timer, node.pnode)
-                        node.input_q.push(inp)
+                        node.input_q.append(inp)
                     lnode.pnode.lnode = None
                     lnode.state = LogicalNodeState.COMPLETED
 

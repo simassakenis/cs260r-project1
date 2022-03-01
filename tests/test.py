@@ -16,9 +16,9 @@ class MapReduceTest(unittest.TestCase):
         map_computation_length = 1
         reduce_computation_length = 1
 
-        map_node = LogicalNode(number_of_inputs = 1, computation_length = map_computation_length, output_size = 1, input_q = [Input(1,0, None)])
+        map_node = LogicalNode(ninputs = 1, input_q = [Input(1,0, None)])
 
-        reduce_node = LogicalNode(number_of_inputs = 1, computation_length = reduce_computation_length, output_size = 1)
+        reduce_node = LogicalNode(ninputs = 1)
 
         # connecting map node to reduce node
         map_node.out_neighbors.append(reduce_node)
@@ -31,7 +31,7 @@ class MapReduceTest(unittest.TestCase):
 
         total_time = simulate(logical_nodes, [physical_node])
         print("Total time: ",total_time)
-        self.assertEqual(total_time, 5)
+        self.assertEqual(total_time, 4)
 
 
 
