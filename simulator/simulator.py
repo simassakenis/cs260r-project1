@@ -143,6 +143,7 @@ def simulator(lnodes, pnodes):
                         if node.pnode is not None:
                             inp.update_time(node.pnode)
                         node.input_q.push(inp)
+                    lnode.pnode.lnode = None
                     lnode.state = COMPLETED
 
             if lnode.state != COMPLETED:
