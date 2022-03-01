@@ -11,38 +11,61 @@
 
 from enum import Enum
 
-logical_node_count = 0
-physical_node_count = 0
+lnode_count = 0
+pnode_count = 0
+
+BANDWIDTH_MULTIPLIER = 1
+COMP_LENGTH_MULTIPLIER = 1
+OUTPUT_SIZE_MULTIPLIER = 1
 
 # Logical Node state enum
 class LogicalNodeState(Enum):
     NOT_SCHEDULED = 1
-    WAITING_FOR_INPUTS = 2
+    NEED_INPUT = 2
     COMPUTING = 3
     COMPLETED = 4
     FAILED = 5
 
-# Logical Node state enum
-class PhysicalNodeState(Enum):
-    NOT_SCHEDULED = 1
-    WAITING_FOR_INPUTS = 2
-    COMPUTING = 3
-    COMPLETED = 4
-    Failed = 5
+# Return the bandwidth multiplier from physical node1 to node2
+# For now, assume uniform bandwidth
+def bandwidth(node1, node2):
+    global BANDWIDTH_MULTIPLIER
+    return BANDWIDTH_MULTIPLIER
+
+# Extra time to add to a logical node as a straggler (for now just a small
+# random chance for every node, but we could make it specific to certain sizes,
+# etc)
+def straggler_time(size):
+    global COMP_LENGTH_MULTIPLIER
+    if random() < (1/1000):
+        return COMP_LENGTH_MULTIPLIER * size
+    return 0
+
+# Default functions for computation time and output size (just the size for now)
+
+def default_comp_length(size):
+    global COMP_LENGTH_MULTIPLIER
+    return COMP_LENGTH_MULTIPLIER * size + straggler_time(size)
+
+def default_output_size(size):
+    global OUTPUT_SIZE_MULTIPLIER
+    return OUTPUT_SIZE_MULTIPLIER * size
 
 class LogicalNode:
-    def __init__(self, number_of_inputs=None, computation_length=None,
-                output_size=None, computation_timestamp=None, phys_node=None,
-                input_q=None, in_neighbors=None, out_neighbors=None,
-                state=LogicalNodeState.NOT_SCHEDULED):
-        global logical_node_count
-        self.node_id = logical_node_count
-        logical_node_count += 1
-        self.number_of_inputs = number_of_inputs
-        self.computation_length = computation_length
+    def __init__(self, ninputs=None, pnode=None, input_q=None,
+                 comp_length=default_comp_length,
+                 output_size=default_output_size,
+                 in_neighbors=None, out_neighbors=None,
+                 state=LogicalNodeState.NOT_SCHEDULED):
+        global lnode_count
+        self.node_id = lnode_count
+        lnode_count += 1
+        self.ninputs = ninputs
+        self.comp_length = comp_length
         self.output_size = output_size
-        self.computation_timestamp = computation_timestamp
-        self.phys_node = phys_node
+        self.input_size = None
+        self.comp_finish_time = None
+        self.pnode = pnode
         self.input_q = input_q if input_q is not None else []
         self.in_neighbors = in_neighbors if in_neighbors is not None else []
         self.out_neighbors = out_neighbors if out_neighbors is not None else []
@@ -50,23 +73,35 @@ class LogicalNode:
 
 class PhysicalNode:
     def __init__(self, compute_power=None, memory=None,
-                bandwidth=None, current_logical_node=None, state=PhysicalNodeState.NOT_SCHEDULED):
-        global physical_node_count
-        self.node_id = physical_node_count
-        physical_node_count += 1
+                bandwidth=None, lnode=None, failed=False):
+        global pnode_count
+        self.node_id = pnode_count
+        pnode_count += 1
         self.compute_power = compute_power
         self.memory = memory
         self.bandwidth = bandwidth
-        self.current_logical_node = current_logical_node
-        self.state = state
+        self.lnode = lnode
+        self.failed = failed
 
+timestamp = 0
+
+# Return the current timestamp plus delta time (will be useful later to
+# implement jumps forward)
+def time_delta(delta):
+    global timestamp
+    end = timestamp + delta
+    # if end < interesting_time:
+    #    interesting_time = end
+    return end
 
 class Input:
-    def __init__(self, data_size=None, timestamp=None, source_node=None):
-        self.data_size = data_size
+    def __init__(self, size=None, timestamp=None, source=None):
+        self.size = size
         self.timestamp = timestamp
-        self.source_node = source_node
-
+        self.source = source
+    # Update the timestamp of this input to arrive at the physical node pnode
+    def update_time(pnode):
+        self.timestamp = time_delta(self.size * bandwidth(self.source, pnode))
 
 def scheduler(logical_nodes, physical_nodes):
     #TODO
@@ -77,45 +112,52 @@ def failure(logical_nodes):
     #TODO
     pass
 
-
-def simulator(logical_nodes, physical_nodes):
-    '''
-        
-    '''
-    current_timestamp = 0
+def simulator(lnodes, pnodes):
+    global timestamp
     while True:
-        new_logical_to_physical_assignments = scheduler(logical_nodes, physical_node)
-        for logical_node, physical_node in new_logical_to_physical_assignments:
-            assert logical_node.state == 'not scheduled'
-            logical_node.phys_node = physical_node
-            logical_node.input_q = None #TODO (update input_q timestamps)
-            logical_node.state = 'waiting for inputs'
+        node_assignments = scheduler(lnodes, pnodes)
+        for lnode, pnode in node_assignments:
+            assert lnode.state == NOT_SCHEDULED
+            assert pnode.lnode == None
+            assert not pnode.failed
+            lnode.pnode = pnode
+            pnode.lnode = lnode
+            for inp in lnode.input_q:
+                if inp.timestamp == None:
+                    inp.update_time(pnode)
+            lnode.state = NEED_INPUT
 
-        for logical_node in logical_nodes:
-            if logical_node.state == 'waiting for inputs':
-                if (len(logical_node.input_q) == logical_node.number_of_inputs
-                    and max(logical_node.input_q) <= current_timestamp):
-                    logical_node.state = 'computing'
-                    input_sz = sum([inp.data_size for inp in logical_node.input_q])
-                    logical_node.computation_timestamp = (current_timestamp
-                        + logical_node.computation_length(input_sz))
+        for lnode in lnodes:
+            done = True
+            if lnode.state == NEED_INPUT:
+                if (len(lnode.input_q) == lnode.ninputs and
+                    max([inp.timestamp for inp in lnode.input_q]) <= timestamp):
+                    lnode.input_size = sum([inp.size for inp in lnode.input_q])
+                    lnode.comp_finish_time = time_delta(lnode.comp_length(lnode.input_size))
+                    lnode.state = COMPUTING
 
-            if logical_node.state == 'computing':
-                if logical_node.computation_timestamp == current_timestamp:
-                    #TODO: add outputs to the input queues of out-neighbors
-                    logical_node.state = 'completed'
+            if lnode.state == COMPUTING:
+                if lnode.comp_finish_time <= timestamp:
+                    for node in lnode.out_neighbors:
+                        inp = Input(lnode.output_size(lnode.input_size), None, lnode.pnode)
+                        if node.pnode is not None:
+                            inp.update_time(node.pnode)
+                        node.input_q.push(inp)
+                    lnode.state = COMPLETED
 
-        if all([logical_node.state == 'completed'
-                for logical_node in logical_nodes]):
-            return current_timestamp
+            if lnode.state != COMPLETED:
+                done = False
 
-        failed_nodes = failure(logical_nodes)
-        for logical_node in failed_nodes:
-            assert logical_node.state in ['waiting for inputs', 'computing']
-            #TODO: (potentially) reset some fields of logical_node
-            logical_node.state = 'not scheduled'
+        if done:
+            return timestamp
 
-        current_timestamp += 1
+        failed_nodes = failure(pnodes)
+        for pnode in failed_nodes:
+            if pnode.lnode is not None:
+                pnode.lnode.state = FAILED
+            pnode.failed = True
+
+        timestamp += 1
 
 
 # if __name__ == '__main__':
