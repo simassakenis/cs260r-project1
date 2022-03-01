@@ -47,7 +47,7 @@ def failure(pnodes):
     return []
 
 def simulator(lnodes, pnodes):
-    Timer timer
+    timer = Timer()
     while True:
         print('Current time: ', timer.get_time())
         node_assignments = scheduler(lnodes, pnodes)
@@ -70,16 +70,14 @@ def simulator(lnodes, pnodes):
                     all([timer.time_passed(inp.timestamp) for inp in lnode.input_q])):
                     print('Logical node {} now computing'.format(lnode.id))
                     lnode.input_size = sum([inp.size for inp in lnode.input_q])
-                    lnode.comp_finish_time =
-                        timer.time_delta(lnode.comp_length(lnode.input_size))
+                    lnode.comp_finish_time = timer.time_delta(lnode.comp_length(lnode.input_size))
                     lnode.state = LogicalNodeState.COMPUTING
 
             if lnode.state == LogicalNodeState.COMPUTING:
                 if timer.time_passed(lnode.comp_finish_time):
                     print('Logical node {} finished computing'.format(lnode.id))
                     for node in lnode.out_neighbors:
-                        inp = Input(lnode.output_size(lnode.input_size), None,
-                                    lnode.pnode)
+                        inp = Input(lnode.output_size(lnode.input_size), None, lnode.pnode)
                         if node.pnode is not None:
                             inp.update_time(timer, node.pnode)
                         node.input_q.push(inp)
