@@ -1,4 +1,4 @@
-from simulator.simulator import LogicalNode, PhysicalNode
+from simulator.simulator import LogicalNode, PhysicalNode, Input
 import random
 
 class HelperFunctions:
@@ -41,9 +41,10 @@ class HelperFunctions:
             map_output_range: range of output size for map nodes
         '''
         logical_map_node = LogicalNode(
-            number_of_inputs=0, 
+            number_of_inputs=1, 
             computation_length=random.randrange(map_computation_range[0],map_computation_range[1]), 
-            output_size=random.randrange(map_output_range[0],map_output_range[1]))
+            output_size=random.randrange(map_output_range[0],map_output_range[1]),
+            input_q = [Input(1,0, None)])
         return logical_map_node
 
     @staticmethod
