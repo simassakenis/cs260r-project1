@@ -26,6 +26,14 @@ class LogicalNodeState(Enum):
     COMPLETED = 4
     FAILED = 5
 
+class LogicalNodeType(Enum):
+    '''
+        Enum for the different types of logical nodes
+    '''
+    MAP = 1
+    REDUCE = 2
+    SHUFFLE = 3
+
 # Extra time to add to a logical node as a straggler (for now just a small
 # random chance for every node, but we could make it specific to certain sizes,
 # etc)
