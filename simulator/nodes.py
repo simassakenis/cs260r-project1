@@ -26,6 +26,12 @@ class LogicalNodeState(Enum):
     COMPLETED = 4
     FAILED = 5
 
+class LogicalNodeType(Enum):
+    MAP = 1
+    REDUCE = 2
+    SHUFFLE = 3
+    OTHER = 4
+    
 # Extra time to add to a logical node as a straggler (for now just a small
 # random chance for every node, but we could make it specific to certain sizes,
 # etc)
@@ -51,10 +57,11 @@ def default_output_size(size):
 
 class LogicalNode:
     def __init__(self, ninputs=None, pnode=None, input_q=None,
-                 comp_length=default_comp_length,
-                 output_size=default_output_size,
-                 in_neighbors=None, out_neighbors=None,
-                 state=LogicalNodeState.NOT_SCHEDULED):
+                comp_length=default_comp_length,
+                output_size=default_output_size,
+                in_neighbors=None, out_neighbors=None,
+                state=LogicalNodeState.NOT_SCHEDULED,
+                type=LogicalNodeType.OTHER):
         global lnode_count
         self.id = lnode_count
         lnode_count += 1
@@ -68,14 +75,44 @@ class LogicalNode:
         self.in_neighbors = in_neighbors if in_neighbors is not None else []
         self.out_neighbors = out_neighbors if out_neighbors is not None else []
         self.state = state
+        self.type = type
 
     # Can this logical node be scheduled?
     def schedulable(self):
-        return self.state is LogicalNodeState.NOT_SCHEDULED or self.state is LogicalNodeState.FAILED
+        return (self.state is LogicalNodeState.NOT_SCHEDULED or self.state is LogicalNodeState.FAILED) and self.inputs_present()
 
     # Are all the inputs present for this logical node (not necessarily arrived)
     def inputs_present(self):
         return len(self.input_q) == self.ninputs
+
+class MapNode(LogicalNode):
+    def __init__(self, ninputs=None, pnode=None, input_q=None,
+                comp_length=default_comp_length,
+                output_size=default_output_size,
+                in_neighbors=None, out_neighbors=None,
+                state=LogicalNodeState.NOT_SCHEDULED):
+        super().__init__(ninputs, pnode, input_q, comp_length, output_size, in_neighbors, out_neighbors, state, LogicalNodeType.MAP)
+
+class ReduceNode(LogicalNode):
+    def __init__(self, ninputs=None, pnode=None, input_q=None,
+                comp_length=default_comp_length,
+                output_size=default_output_size,
+                in_neighbors=None, out_neighbors=None,
+                state=LogicalNodeState.NOT_SCHEDULED):
+        super().__init__(ninputs, pnode, input_q, comp_length, output_size, in_neighbors, out_neighbors, state, LogicalNodeType.REDUCE)
+
+class ShuffleNode(LogicalNode):
+    def __init__(self, ninputs=None, pnode=None, input_q=None,
+                comp_length=default_comp_length,
+                output_size=default_output_size,
+                in_neighbors=None, out_neighbors=None,
+                state=LogicalNodeState.NOT_SCHEDULED):
+        super().__init__(ninputs, pnode, input_q, comp_length, output_size, in_neighbors, out_neighbors, state, LogicalNodeType.SHUFFLE)
+
+        def schedulable(self):
+            return (self.state is LogicalNodeState.NOT_SCHEDULED or self.state is LogicalNodeState.FAILED) and len(self.input_q) > 0
+
+
 
 class PhysicalNode:
     def __init__(self, compute_power=None, memory=None,
