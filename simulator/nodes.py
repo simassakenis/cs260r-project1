@@ -68,7 +68,6 @@ class LogicalNode:
         self.ninputs = ninputs
         self.comp_length = comp_length
         self.output_size = output_size
-        self.input_size = None
         self.comp_finish_time = None
         self.pnode = pnode
         self.input_q = input_q if input_q is not None else []
@@ -76,6 +75,11 @@ class LogicalNode:
         self.out_neighbors = out_neighbors if out_neighbors is not None else []
         self.state = state
         self.type = type
+
+    @property
+    def input_size(self):
+        return sum([x.size for x in self.input_q])
+            
 
     # Can this logical node be scheduled?
     def schedulable(self):

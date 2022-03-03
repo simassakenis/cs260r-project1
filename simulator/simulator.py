@@ -45,7 +45,6 @@ def simulate(lnodes, pnodes):
                 if (lnode.inputs_present() and
                     all([timer.time_passed(inp.timestamp) for inp in lnode.input_q])):
                     print('{} now computing'.format(lnode.id))
-                    lnode.input_size = sum([inp.size for inp in lnode.input_q])
                     lnode.comp_finish_time = timer.time_delta(lnode.comp_length(lnode.input_size))
                     lnode.state = LogicalNodeState.COMPUTING
 
