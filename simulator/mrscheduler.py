@@ -16,7 +16,7 @@ class MRScheduler:
         remaining_physical_nodes = list(filter(lambda x: x.schedulable(), physical_nodes))
 
         # Scheduling shuffle node
-        shuffle_node = next(filter(lambda x: x.type == LogicalNodeType.SHUFFLE, logical_nodes), None)
+        shuffle_node = next(filter(lambda x: x.type == LogicalNodeType.SHUFFLE and x.schedulable(), logical_nodes), None)
         if shuffle_node is not None and shuffle_node.schedulable():
             best_physical_node = MRScheduler.find_best_physical_node(shuffle_node, remaining_physical_nodes)
             if best_physical_node is not None:
@@ -24,7 +24,7 @@ class MRScheduler:
                 remaining_physical_nodes.remove(best_physical_node)
         
         # Scheduling map nodes
-        map_nodes = list(filter(lambda x: x.type == LogicalNodeType.MAP, logical_nodes))
+        map_nodes = list(filter(lambda x: x.type == LogicalNodeType.MAP and x.schedulable(), logical_nodes))
         for map_node in map_nodes:
             if map_node.schedulable():
                 best_physical_node = MRScheduler.find_best_physical_node(map_node, remaining_physical_nodes)
@@ -33,7 +33,7 @@ class MRScheduler:
                     remaining_physical_nodes.remove(best_physical_node)
         
         # Scheduling reduce nodes
-        reduce_nodes = list(filter(lambda x: x.type == LogicalNodeType.REDUCE, logical_nodes))
+        reduce_nodes = list(filter(lambda x: x.type == LogicalNodeType.REDUCE and x.schedulable(), logical_nodes))
         for reduce_node in reduce_nodes:
             if reduce_node.schedulable():
                 best_physical_node = MRScheduler.find_best_physical_node(reduce_node, remaining_physical_nodes)
@@ -42,7 +42,7 @@ class MRScheduler:
                     remaining_physical_nodes.remove(best_physical_node)
 
         # Scheduling other nodes
-        other_nodes = list(filter(lambda x: x.type != LogicalNodeType.OTHER, logical_nodes))
+        other_nodes = list(filter(lambda x: x.type == LogicalNodeType.OTHER and x.schedulable(), logical_nodes))
         for other_node in other_nodes:
             if other_node.schedulable():
                 best_physical_node = MRScheduler.find_best_physical_node(other_node, remaining_physical_nodes)
@@ -53,7 +53,7 @@ class MRScheduler:
         return scheduled_pairs
 
     @staticmethod
-    def find_best_physical_node(logical_node: LogicalNode, physical_nodes: list[PhysicalNode]):
+    def find_best_physical_node(logical_node: LogicalNode, remaining_physical_nodes: list[PhysicalNode]):
         '''
             Function to find the best physical node for the logical node
             logical_node: logical node to score

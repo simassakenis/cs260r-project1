@@ -3,6 +3,7 @@ from simulator.nodes import LogicalNode, PhysicalNode, Input, MapNode, ReduceNod
 from simulator.simulator import simulate
 import random
 from tests.helperfunctions import HelperFunctions
+from simulator.simplequeuescheduler import SimpleQueueScheduler
 
 class MapReduceTest(unittest.TestCase):
 
@@ -29,7 +30,7 @@ class MapReduceTest(unittest.TestCase):
         # creating physical node
         physical_node = PhysicalNode(compute_power = 1, memory = 1, bandwidth = 1)
 
-        total_time = simulate(logical_nodes, [physical_node])
+        total_time = simulate(logical_nodes, [physical_node], SimpleQueueScheduler)
         print("Total time: ",total_time)
         self.assertEqual(total_time, 4)
     
@@ -56,7 +57,7 @@ class MapReduceTest(unittest.TestCase):
         # creating physical node
         physical_node = PhysicalNode(compute_power = 1, memory = 1, bandwidth = 1)
 
-        total_time = simulate(logical_nodes, [physical_node])
+        total_time = simulate(logical_nodes, [physical_node], SimpleQueueScheduler)
         print("Total time: ",total_time)
         self.assertEqual(total_time, 7)
 
@@ -83,7 +84,7 @@ class MapReduceTest(unittest.TestCase):
         # creating physical node
         physical_node = PhysicalNode(compute_power = 1, memory = 1, bandwidth = 1)
 
-        total_time = simulate(logical_nodes, [physical_node])
+        total_time = simulate(logical_nodes, [physical_node], SimpleQueueScheduler)
         print("Total time: ",total_time)
         self.assertEqual(total_time, 10)
 
@@ -111,7 +112,7 @@ class MapReduceTest(unittest.TestCase):
         # creating physical node
         physical_node = PhysicalNode(compute_power = 1, memory = 1, bandwidth = 1)
 
-        total_time = simulate(logical_nodes, [physical_node])
+        total_time = simulate(logical_nodes, [physical_node], SimpleQueueScheduler)
         print("Total time: ",total_time)
         self.assertEqual(total_time, 11)
 

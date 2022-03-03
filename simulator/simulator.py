@@ -10,23 +10,20 @@
 # system and determines the next state.
 
 from simulator.simplequeuescheduler import SimpleQueueScheduler
+from simulator.mrscheduler import MRScheduler
 from simulator.nodes import LogicalNode, PhysicalNode, Input, LogicalNodeState, LogicalNodeType, MapNode, ReduceNode, ShuffleNode
 from simulator.timer import Timer
 import logging
-
-
-def scheduler(lnodes, pnodes):
-    return SimpleQueueScheduler.schedule(lnodes, pnodes)
 
 def failure(pnodes):
     #TODO
     return []
 
-def simulate(lnodes, pnodes):
+def simulate(lnodes, pnodes, scheduler_class):
     timer = Timer()
     while True:
         print('Current time: ', timer.get_time())
-        node_assignments = scheduler(lnodes, pnodes)
+        node_assignments = scheduler_class.schedule(lnodes, pnodes)
         for lnode, pnode in node_assignments:
             assert lnode.schedulable()
             assert pnode.schedulable()

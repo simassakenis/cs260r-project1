@@ -131,8 +131,8 @@ class ShuffleNode(LogicalNode):
         ShuffleNode.shuffle_count += 1
         super().__init__(ninputs, pnode, input_q, comp_length, output_size, in_neighbors, out_neighbors, state, LogicalNodeType.SHUFFLE, nid)
 
-        def schedulable(self):
-            return (self.state is LogicalNodeState.NOT_SCHEDULED or self.state is LogicalNodeState.FAILED) and len(self.input_q) > 0
+    def schedulable(self):
+        return (self.state is LogicalNodeState.NOT_SCHEDULED or self.state is LogicalNodeState.FAILED) and len(self.input_q) > 0
 
 
 
