@@ -1,4 +1,4 @@
-from simulator.simulator import LogicalNode, PhysicalNode, Input
+from simulator.simulator import LogicalNode, PhysicalNode, Input, MapNode, ReduceNode
 import random
 
 class HelperFunctions:
@@ -40,8 +40,7 @@ class HelperFunctions:
             map_computation_range: range of computation length for map nodes
             map_output_range: range of output size for map nodes
         '''
-        logical_map_node = LogicalNode(
-            ninputs=1,
+        logical_map_node = MapNode(
             input_q = [Input(1,0, None)])
         return logical_map_node
 
@@ -67,7 +66,7 @@ class HelperFunctions:
             reduce_output_range: range of output size for reduce nodes
             map_nodes: list of map nodes
         '''
-        logical_reduce_node = LogicalNode()
+        logical_reduce_node = ReduceNode()
         return logical_reduce_node
     
     @staticmethod
@@ -98,7 +97,6 @@ class HelperFunctions:
             # randomly connect to map nodes
             selected_map_nodes = random.sample(map_nodes, int(connection_ratio * len(map_nodes)))
             rNode.in_neighbors = selected_map_nodes
-            rNode.ninputs = len(selected_map_nodes)
             for mNode in selected_map_nodes:
                 mNode.out_neighbors.append(rNode)
                 # should we modify output size of map node?

@@ -10,7 +10,7 @@
 # system and determines the next state.
 
 from simulator.simplequeuescheduler import SimpleQueueScheduler
-from simulator.nodes import LogicalNode, PhysicalNode, Input, LogicalNodeState
+from simulator.nodes import LogicalNode, PhysicalNode, Input, LogicalNodeState, LogicalNodeType, MapNode, ReduceNode, ShuffleNode
 from simulator.timer import Timer
 import logging
 
@@ -47,6 +47,11 @@ def simulate(lnodes, pnodes):
                     print('{} now computing'.format(lnode.id))
                     lnode.comp_finish_time = timer.time_delta(lnode.comp_length(lnode.input_size))
                     lnode.state = LogicalNodeState.COMPUTING
+                elif lnode.type is LogicalNodeType.SHUFFLE:
+                    # Keep updating the input times
+                    for inp in lnode.input_q:
+                        if inp.timestamp == None:
+                            inp.update_time(timer, lnode.pnode)
 
             if lnode.state is LogicalNodeState.COMPUTING:
                 if timer.time_passed(lnode.comp_finish_time):

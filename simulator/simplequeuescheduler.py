@@ -10,7 +10,7 @@ class SimpleQueueScheduler:
         '''
 
         # List of all logical nodes not scheduled and failed with all inputs present
-        remaining_logical_nodes = list(filter(lambda x: x.schedulable() and x.inputs_present(), logical_nodes))
+        remaining_logical_nodes = list(filter(lambda x: x.schedulable(), logical_nodes))
         
         # List of all physical nodes not scheduled
         remaining_physical_nodes = list(filter(lambda x: x.schedulable(), physical_nodes))

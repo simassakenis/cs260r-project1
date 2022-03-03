@@ -62,11 +62,12 @@ class LogicalNode:
                 state=LogicalNodeState.NOT_SCHEDULED,
                 type=LogicalNodeType.OTHER,
                 id = None):
+        self.id = id
         if id is None:
             self.id = 'lnode_' + str(LogicalNode.lnode_count)
             LogicalNode.lnode_count += 1
-        self.ninputs = ninputs
         self.comp_length = comp_length
+        # self.ninputs = ninputs
         self.output_size = output_size
         self.comp_finish_time = None
         self.pnode = pnode
@@ -79,6 +80,10 @@ class LogicalNode:
     @property
     def input_size(self):
         return sum([x.size for x in self.input_q])
+
+    @property
+    def ninputs(self):
+        return len(self.in_neighbors)
             
 
     # Can this logical node be scheduled?
@@ -99,6 +104,10 @@ class MapNode(LogicalNode):
         nid = 'map_' + str(MapNode.map_count)
         MapNode.map_count += 1
         super().__init__(ninputs, pnode, input_q, comp_length, output_size, in_neighbors, out_neighbors, state, LogicalNodeType.MAP, nid)
+    
+    @property
+    def ninputs(self):
+        return 1
 
 class ReduceNode(LogicalNode):
     reduce_count = 0
