@@ -30,7 +30,7 @@ def simulate(lnodes, pnodes):
         for lnode, pnode in node_assignments:
             assert lnode.schedulable()
             assert pnode.schedulable()
-            print('Assigned logical node {} to physical node {}; now waiting'
+            print('Assigned {} to {}; now waiting'
                 .format(lnode.id, pnode.id))
             lnode.pnode = pnode
             pnode.lnode = lnode
@@ -44,14 +44,14 @@ def simulate(lnodes, pnodes):
             if lnode.state is LogicalNodeState.NEED_INPUT:
                 if (lnode.inputs_present() and
                     all([timer.time_passed(inp.timestamp) for inp in lnode.input_q])):
-                    print('Logical node {} now computing'.format(lnode.id))
+                    print('{} now computing'.format(lnode.id))
                     lnode.input_size = sum([inp.size for inp in lnode.input_q])
                     lnode.comp_finish_time = timer.time_delta(lnode.comp_length(lnode.input_size))
                     lnode.state = LogicalNodeState.COMPUTING
 
             if lnode.state is LogicalNodeState.COMPUTING:
                 if timer.time_passed(lnode.comp_finish_time):
-                    print('Logical node {} finished computing'.format(lnode.id))
+                    print('{} finished computing'.format(lnode.id))
                     for node in lnode.out_neighbors:
                         inp = Input(lnode.output_size(lnode.input_size), None, lnode.pnode)
                         if node.pnode is not None:

@@ -15,8 +15,6 @@ def bandwidth(node1, node2):
     global BANDWIDTH_MULTIPLIER
     return BANDWIDTH_MULTIPLIER
 
-lnode_count = 0
-pnode_count = 0
 
 # Logical Node state enum
 class LogicalNodeState(Enum):
@@ -56,15 +54,17 @@ def default_output_size(size):
     return OUTPUT_SIZE_MULTIPLIER * size
 
 class LogicalNode:
+    lnode_count = 0
     def __init__(self, ninputs=None, pnode=None, input_q=None,
                 comp_length=default_comp_length,
                 output_size=default_output_size,
                 in_neighbors=None, out_neighbors=None,
                 state=LogicalNodeState.NOT_SCHEDULED,
-                type=LogicalNodeType.OTHER):
-        global lnode_count
-        self.id = lnode_count
-        lnode_count += 1
+                type=LogicalNodeType.OTHER,
+                id = None):
+        if id is None:
+            self.id = 'lnode_' + str(LogicalNode.lnode_count)
+            LogicalNode.lnode_count += 1
         self.ninputs = ninputs
         self.comp_length = comp_length
         self.output_size = output_size
@@ -86,28 +86,37 @@ class LogicalNode:
         return len(self.input_q) == self.ninputs
 
 class MapNode(LogicalNode):
+    map_count = 0
     def __init__(self, ninputs=None, pnode=None, input_q=None,
                 comp_length=default_comp_length,
                 output_size=default_output_size,
                 in_neighbors=None, out_neighbors=None,
                 state=LogicalNodeState.NOT_SCHEDULED):
-        super().__init__(ninputs, pnode, input_q, comp_length, output_size, in_neighbors, out_neighbors, state, LogicalNodeType.MAP)
+        nid = 'map_' + str(MapNode.map_count)
+        MapNode.map_count += 1
+        super().__init__(ninputs, pnode, input_q, comp_length, output_size, in_neighbors, out_neighbors, state, LogicalNodeType.MAP, nid)
 
 class ReduceNode(LogicalNode):
+    reduce_count = 0
     def __init__(self, ninputs=None, pnode=None, input_q=None,
                 comp_length=default_comp_length,
                 output_size=default_output_size,
                 in_neighbors=None, out_neighbors=None,
                 state=LogicalNodeState.NOT_SCHEDULED):
-        super().__init__(ninputs, pnode, input_q, comp_length, output_size, in_neighbors, out_neighbors, state, LogicalNodeType.REDUCE)
+        nid = 'reduce_' + str(ReduceNode.reduce_count)
+        ReduceNode.reduce_count += 1
+        super().__init__(ninputs, pnode, input_q, comp_length, output_size, in_neighbors, out_neighbors, state, LogicalNodeType.REDUCE, nid)
 
 class ShuffleNode(LogicalNode):
+    shuffle_count = 0
     def __init__(self, ninputs=None, pnode=None, input_q=None,
                 comp_length=default_comp_length,
                 output_size=default_output_size,
                 in_neighbors=None, out_neighbors=None,
                 state=LogicalNodeState.NOT_SCHEDULED):
-        super().__init__(ninputs, pnode, input_q, comp_length, output_size, in_neighbors, out_neighbors, state, LogicalNodeType.SHUFFLE)
+        nid = 'shuffle_' + str(ShuffleNode.shuffle_count)
+        ShuffleNode.shuffle_count += 1
+        super().__init__(ninputs, pnode, input_q, comp_length, output_size, in_neighbors, out_neighbors, state, LogicalNodeType.SHUFFLE, nid)
 
         def schedulable(self):
             return (self.state is LogicalNodeState.NOT_SCHEDULED or self.state is LogicalNodeState.FAILED) and len(self.input_q) > 0
@@ -115,11 +124,11 @@ class ShuffleNode(LogicalNode):
 
 
 class PhysicalNode:
+    pnode_count = 0
     def __init__(self, compute_power=None, memory=None,
                 bandwidth=None, lnode=None, failed=False):
-        global pnode_count
-        self.id = pnode_count
-        pnode_count += 1
+        self.id = 'pnode_' + str(PhysicalNode.pnode_count)
+        PhysicalNode.pnode_count += 1
         self.compute_power = compute_power
         self.memory = memory
         self.bandwidth = bandwidth
