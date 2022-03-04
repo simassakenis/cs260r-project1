@@ -67,7 +67,6 @@ class LogicalNode:
             self.id = 'lnode_' + str(LogicalNode.lnode_count)
             LogicalNode.lnode_count += 1
         self.comp_length = comp_length
-        # self.ninputs = ninputs
         self.output_size = output_size
         self.comp_finish_time = None
         self.pnode = pnode
@@ -76,6 +75,8 @@ class LogicalNode:
         self.out_neighbors = out_neighbors if out_neighbors is not None else []
         self.state = state
         self.type = type
+        self.compute_start_time = None
+        self.compute_schedule_time = None
 
     @property
     def input_size(self):

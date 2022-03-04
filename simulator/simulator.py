@@ -31,6 +31,7 @@ def simulate(lnodes, pnodes, scheduler_class):
                 .format(lnode.id, pnode.id))
             lnode.pnode = pnode
             pnode.lnode = lnode
+            lnode.compute_schedule_time = timer.get_time()
             for inp in lnode.input_q:
                 if inp.timestamp == None:
                     inp.update_time(timer, pnode)
@@ -43,9 +44,15 @@ def simulate(lnodes, pnodes, scheduler_class):
                     all([timer.time_passed(inp.timestamp) for inp in lnode.input_q])):
                     print('{} now computing'.format(lnode.id))
                     lnode.comp_finish_time = timer.time_delta(lnode.comp_length(lnode.input_size))
+                    if lnode.type is LogicalNodeType.SHUFFLE:
+                        # if the node is a shuffle node, then we update the finish time wrt how long it was running
+                        running_time = timer.time_delta(lnode.compute_schedule_time)
+                        remaining_computation_time = max(lnode.comp_length(lnode.input_size) - running_time, 0)
+                        lnode.comp_finish_time = timer.time_delta(remaining_computation_time)
+                    lnode.compute_start_time = timer.get_time()
                     lnode.state = LogicalNodeState.COMPUTING
                 elif lnode.type is LogicalNodeType.SHUFFLE:
-                    # Keep updating the input times
+                    # If the logical node is a shuffle node, then keep updating the timestamp for the inputs
                     for inp in lnode.input_q:
                         if inp.timestamp == None:
                             inp.update_time(timer, lnode.pnode)

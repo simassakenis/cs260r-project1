@@ -38,7 +38,7 @@ class TestMRScheduler(unittest.TestCase):
         total_time = simulate(logical_nodes, physical_nodes, MRScheduler)
 
         print("Total time: ",total_time)
-        self.assertEqual(total_time, 8)
+        self.assertEqual(total_time, 7)
 
     
     def test_map_reduce_sch_2(self):
@@ -74,7 +74,7 @@ class TestMRScheduler(unittest.TestCase):
         total_time = simulate(logical_nodes, physical_nodes, MRScheduler)
 
         print("Total time: ",total_time)
-        self.assertEqual(total_time, 10)
+        self.assertEqual(total_time, 8)
 
     def test_map_reduce_sch_3(self):
         '''
@@ -109,7 +109,42 @@ class TestMRScheduler(unittest.TestCase):
         total_time = simulate(logical_nodes, physical_nodes, MRScheduler)
 
         print("Total time: ",total_time)
-        self.assertEqual(total_time, 19)
+        self.assertEqual(total_time, 15)
+
+    def test_map_reduce_sch_4(self):
+        '''
+            Function to test simple map reduce with 2 map node, 2 reduce node, and 2 physical node
+        '''
+        
+        num_map_nodes = 30
+        num_reduce_nodes = 8
+        map_computation_length = 1
+        num_physical_nodes = 8
+        compute_power = 1
+        memory = 1
+        bandwidth = 1
+
+        # initializing Computation Graph
+        map_nodes, shuffle_node, reduce_nodes = TestMRScheduler.create_map_reduce_graph(num_map_nodes, [map_computation_length]*num_map_nodes, num_reduce_nodes)
+
+        # creating physical nodes
+        physical_nodes = TestMRScheduler.create_physical_nodes(
+            num_physical_nodes, 
+            [compute_power]*num_physical_nodes, 
+            [memory]*num_physical_nodes, 
+            [bandwidth]*num_physical_nodes)
+
+        # logical nodes
+        logical_nodes = []
+        logical_nodes.extend(map_nodes)
+        logical_nodes.append(shuffle_node)
+        logical_nodes.extend(reduce_nodes)
+        
+        # Simulating the computation
+        total_time = simulate(logical_nodes, physical_nodes, MRScheduler)
+
+        print("Total time: ",total_time)
+        self.assertEqual(total_time, 59)
 
     @staticmethod
     def create_map_reduce_graph(num_map_nodes, input_map_sizes, num_reduce_nodes):
