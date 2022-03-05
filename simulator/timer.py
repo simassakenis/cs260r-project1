@@ -22,5 +22,5 @@ class Timer:
     # Return the time elapsed since `time`, or 0 if that time has yet to occur
     def elapsed_since(self, time):
         if self.passed(time):
-            return time - self.time
+            return self.time - time
         return 0

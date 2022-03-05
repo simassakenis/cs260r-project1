@@ -74,7 +74,7 @@ class TestMRScheduler(unittest.TestCase):
         total_time = simulate(logical_nodes, physical_nodes, MRScheduler)
 
         print("Total time: ",total_time)
-        self.assertEqual(total_time, 8)
+        self.assertEqual(total_time, 9)
 
     def test_map_reduce_sch_3(self):
         '''
@@ -144,7 +144,7 @@ class TestMRScheduler(unittest.TestCase):
         total_time = simulate(logical_nodes, physical_nodes, MRScheduler)
 
         print("Total time: ",total_time)
-        self.assertEqual(total_time, 59)
+        self.assertEqual(total_time, 65)
 
     @staticmethod
     def create_map_reduce_graph(num_map_nodes, input_map_sizes, num_reduce_nodes):

@@ -45,28 +45,13 @@ def simulate(lnodes, pnodes, scheduler_class, verbose=True):
                     if verbose:
                         print('{} now computing'.format(lnode.id))
                     if lnode.type is LogicalNodeType.SHUFFLE:
-                        # if the node is a shuffle node, then we update the finish time wrt how long it was running
-                        # XXX I'm pretty sure this should be timer.elapsed_since,
-                        # not timer.delta (I believe you want to calculate how
-                        # long the node has been running, not what the current
-                        # time plus the time it was scheduled is, right?)
-                        # If I change it, some tests fail, though, so I won't
-                        # do so right now
-                        running_time = timer.delta(lnode.schedule_time)
+                        running_time = timer.elapsed_since(lnode.schedule_time)
                         remaining_computation_time = max(lnode.comp_time - running_time, 0)
                         lnode.comp_end_time = timer.delta(remaining_computation_time)
                     else:
                         lnode.comp_end_time = timer.delta(lnode.comp_time)
                     lnode.comp_start_time = timer.now()
                     lnode.state = LogicalNodeState.COMPUTING
-                elif lnode.type is LogicalNodeType.SHUFFLE:
-                    # XXX I don't think we should need to do this - once a
-                    # shuffle node has been scheduled, any messages that are
-                    # sent after that point will have timestamps anyway
-                    # If the logical node is a shuffle node, then keep updating the timestamp for the inputs
-                    for inp in lnode.input_q:
-                        if inp.timestamp == None:
-                            inp.update_time(timer, lnode.pnode)
 
             if lnode.state is LogicalNodeState.COMPUTING:
                 if timer.passed(lnode.comp_end_time):
