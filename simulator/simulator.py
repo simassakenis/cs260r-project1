@@ -11,13 +11,9 @@
 
 from simulator.simplequeuescheduler import SimpleQueueScheduler
 from simulator.mrscheduler import MRScheduler
-from simulator.nodes import LogicalNode, PhysicalNode, Input, LogicalNodeState, LogicalNodeType, MapNode, ReduceNode, ShuffleNode
+from simulator.nodes import LogicalNode, PhysicalNode, Input, LogicalNodeState, LogicalNodeType, MapNode, ReduceNode, ShuffleNode, failure
 from simulator.timer import Timer
 import logging
-
-def failure(pnodes):
-    #TODO
-    return []
 
 def simulate(lnodes, pnodes, scheduler_class, verbose=True):
     timer = Timer()
