@@ -19,19 +19,20 @@ def failure(pnodes):
     #TODO
     return []
 
-def simulate(lnodes, pnodes, scheduler_class):
+def simulate(lnodes, pnodes, scheduler_class, verbose=True):
     timer = Timer()
     while True:
-        print('Current time: ', timer.get_time())
+        if verbose:
+            print('Current time: {}'.format(timer.now()))
         node_assignments = scheduler_class.schedule(lnodes, pnodes)
         for lnode, pnode in node_assignments:
             assert lnode.schedulable()
             assert pnode.schedulable()
-            print('Assigned {} to {}; now waiting'
-                .format(lnode.id, pnode.id))
+            if verbose:
+                print('Assigned {} to {}; now waiting'.format(lnode.id, pnode.id))
             lnode.pnode = pnode
             pnode.lnode = lnode
-            lnode.compute_schedule_time = timer.get_time()
+            lnode.schedule_time = timer.now()
             for inp in lnode.input_q:
                 if inp.timestamp == None:
                     inp.update_time(timer, pnode)
@@ -40,28 +41,39 @@ def simulate(lnodes, pnodes, scheduler_class):
         for lnode in lnodes:
             done = True
             if lnode.state is LogicalNodeState.NEED_INPUT:
-                if (lnode.inputs_present() and
-                    all([timer.time_passed(inp.timestamp) for inp in lnode.input_q])):
-                    print('{} now computing'.format(lnode.id))
-                    lnode.comp_finish_time = timer.time_delta(lnode.comp_length(lnode.input_size))
+                if (lnode.inputs_present() and all([timer.passed(inp.timestamp) for inp in lnode.input_q])):
+                    if verbose:
+                        print('{} now computing'.format(lnode.id))
                     if lnode.type is LogicalNodeType.SHUFFLE:
                         # if the node is a shuffle node, then we update the finish time wrt how long it was running
-                        running_time = timer.time_delta(lnode.compute_schedule_time)
-                        remaining_computation_time = max(lnode.comp_length(lnode.input_size) - running_time, 0)
-                        lnode.comp_finish_time = timer.time_delta(remaining_computation_time)
-                    lnode.compute_start_time = timer.get_time()
+                        # XXX I'm pretty sure this should be timer.elapsed_since,
+                        # not timer.delta (I believe you want to calculate how
+                        # long the node has been running, not what the current
+                        # time plus the time it was scheduled is, right?)
+                        # If I change it, some tests fail, though, so I won't
+                        # do so right now
+                        running_time = timer.delta(lnode.schedule_time)
+                        remaining_computation_time = max(lnode.comp_time - running_time, 0)
+                        lnode.comp_end_time = timer.delta(remaining_computation_time)
+                    else:
+                        lnode.comp_end_time = timer.delta(lnode.comp_time)
+                    lnode.comp_start_time = timer.now()
                     lnode.state = LogicalNodeState.COMPUTING
                 elif lnode.type is LogicalNodeType.SHUFFLE:
+                    # XXX I don't think we should need to do this - once a
+                    # shuffle node has been scheduled, any messages that are
+                    # sent after that point will have timestamps anyway
                     # If the logical node is a shuffle node, then keep updating the timestamp for the inputs
                     for inp in lnode.input_q:
                         if inp.timestamp == None:
                             inp.update_time(timer, lnode.pnode)
 
             if lnode.state is LogicalNodeState.COMPUTING:
-                if timer.time_passed(lnode.comp_finish_time):
-                    print('{} finished computing'.format(lnode.id))
+                if timer.passed(lnode.comp_end_time):
+                    if verbose:
+                        print('{} finished computing'.format(lnode.id))
                     for node in lnode.out_neighbors:
-                        inp = Input(lnode.output_size(lnode.input_size), None, lnode.pnode)
+                        inp = Input(lnode.output_size, None, lnode.pnode)
                         if node.pnode is not None:
                             inp.update_time(timer, node.pnode)
                         node.input_q.append(inp)
@@ -72,18 +84,14 @@ def simulate(lnodes, pnodes, scheduler_class):
                 done = False
 
         if done:
-            return timer.get_time()
+            return timer.now()
 
         failed_nodes = failure(pnodes)
         for pnode in failed_nodes:
             if pnode.lnode is not None:
+                for inp in pnode.lnode.input_q:
+                    inp.timestamp = None
                 pnode.lnode.state = LogicalNodeState.FAILED
             pnode.failed = True
 
-        timer.time_step()
-
-
-# if __name__ == '__main__':
-#     lnodes = # TODO (create logical graph)
-#     pnodes = # TODO (make physical node list)
-#     execution_time = simulate(lnodes, pnodes)
+        timer.step()

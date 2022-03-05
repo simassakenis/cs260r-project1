@@ -157,7 +157,7 @@ class TestMRScheduler(unittest.TestCase):
         map_nodes = TestMRScheduler.create_map_nodes(num_map_nodes, input_map_sizes)
 
         # creating shuffle node
-        shuffle_node = ShuffleNode(output_size=TestMRScheduler.shuffle_output_size)
+        shuffle_node = ShuffleNode(output_length=TestMRScheduler.shuffle_output_length)
 
         # connect map nodes to shuffle node
         for map_node in map_nodes:
@@ -197,7 +197,7 @@ class TestMRScheduler(unittest.TestCase):
         return map_nodes
 
     @staticmethod
-    def shuffle_output_size(size):
+    def shuffle_output_length(size):
         return 0
 
     

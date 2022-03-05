@@ -5,9 +5,9 @@ import random
 # Constants that should later be configurable
 
 BANDWIDTH_MULTIPLIER = 1
-STRAGGLER_SIZE_MULTIPLIER = 1
+STRAGGLER_LENGTH_MULTIPLIER = 1
 COMP_LENGTH_MULTIPLIER = 1
-OUTPUT_SIZE_MULTIPLIER = 1
+OUTPUT_LENGTH_MULTIPLIER = 1
 
 # Return the bandwidth multiplier from physical node1 to node2
 # For now, assume uniform bandwidth
@@ -29,14 +29,14 @@ class LogicalNodeType(Enum):
     REDUCE = 2
     SHUFFLE = 3
     OTHER = 4
-    
+
 # Extra time to add to a logical node as a straggler (for now just a small
 # random chance for every node, but we could make it specific to certain sizes,
 # etc)
 def straggler_time(size):
-    global STRAGGLER_SIZE_MULTIPLIER
+    global STRAGGLER_LENGTH_MULTIPLIER
     if random() < (1/1000):
-        return STRAGGLER_SIZE_MULTIPLIER * size
+        return STRAGGLER_LENGTH_MULTIPLIER * size
     return 0
 
 # Default functions for computation time and output size (just the size for now)
@@ -49,15 +49,15 @@ def comp_length_with_straggler(size):
     global COMP_LENGTH_MULTIPLIER
     return COMP_LENGTH_MULTIPLIER * size + straggler_time(size)
 
-def default_output_size(size):
-    global OUTPUT_SIZE_MULTIPLIER
-    return OUTPUT_SIZE_MULTIPLIER * size
+def default_output_length(size):
+    global OUTPUT_LENGTH_MULTIPLIER
+    return OUTPUT_LENGTH_MULTIPLIER * size
 
 class LogicalNode:
     lnode_count = 0
     def __init__(self, ninputs=None, pnode=None, input_q=None,
                 comp_length=default_comp_length,
-                output_size=default_output_size,
+                output_length=default_output_length,
                 in_neighbors=None, out_neighbors=None,
                 state=LogicalNodeState.NOT_SCHEDULED,
                 type=LogicalNodeType.OTHER,
@@ -67,16 +67,16 @@ class LogicalNode:
             self.id = 'lnode_' + str(LogicalNode.lnode_count)
             LogicalNode.lnode_count += 1
         self.comp_length = comp_length
-        self.output_size = output_size
-        self.comp_finish_time = None
+        self.output_length = output_length
         self.pnode = pnode
         self.input_q = input_q if input_q is not None else []
         self.in_neighbors = in_neighbors if in_neighbors is not None else []
         self.out_neighbors = out_neighbors if out_neighbors is not None else []
         self.state = state
         self.type = type
-        self.compute_start_time = None
-        self.compute_schedule_time = None
+        self.schedule_time = None
+        self.comp_start_time = None
+        self.comp_end_time = None
 
     @property
     def input_size(self):
@@ -85,7 +85,14 @@ class LogicalNode:
     @property
     def ninputs(self):
         return len(self.in_neighbors)
-            
+
+    @property
+    def comp_time(self):
+        return self.comp_length(self.input_size)
+
+    @property
+    def output_size(self):
+        return self.output_length(self.input_size)
 
     # Can this logical node be scheduled?
     def schedulable(self):
@@ -99,13 +106,13 @@ class MapNode(LogicalNode):
     map_count = 0
     def __init__(self, ninputs=None, pnode=None, input_q=None,
                 comp_length=default_comp_length,
-                output_size=default_output_size,
+                output_length=default_output_length,
                 in_neighbors=None, out_neighbors=None,
                 state=LogicalNodeState.NOT_SCHEDULED):
         nid = 'map_' + str(MapNode.map_count)
         MapNode.map_count += 1
-        super().__init__(ninputs, pnode, input_q, comp_length, output_size, in_neighbors, out_neighbors, state, LogicalNodeType.MAP, nid)
-    
+        super().__init__(ninputs, pnode, input_q, comp_length, output_length, in_neighbors, out_neighbors, state, LogicalNodeType.MAP, nid)
+
     @property
     def ninputs(self):
         return 1
@@ -114,23 +121,23 @@ class ReduceNode(LogicalNode):
     reduce_count = 0
     def __init__(self, ninputs=None, pnode=None, input_q=None,
                 comp_length=default_comp_length,
-                output_size=default_output_size,
+                output_length=default_output_length,
                 in_neighbors=None, out_neighbors=None,
                 state=LogicalNodeState.NOT_SCHEDULED):
         nid = 'reduce_' + str(ReduceNode.reduce_count)
         ReduceNode.reduce_count += 1
-        super().__init__(ninputs, pnode, input_q, comp_length, output_size, in_neighbors, out_neighbors, state, LogicalNodeType.REDUCE, nid)
+        super().__init__(ninputs, pnode, input_q, comp_length, output_length, in_neighbors, out_neighbors, state, LogicalNodeType.REDUCE, nid)
 
 class ShuffleNode(LogicalNode):
     shuffle_count = 0
     def __init__(self, ninputs=None, pnode=None, input_q=None,
                 comp_length=default_comp_length,
-                output_size=default_output_size,
+                output_length=default_output_length,
                 in_neighbors=None, out_neighbors=None,
                 state=LogicalNodeState.NOT_SCHEDULED):
         nid = 'shuffle_' + str(ShuffleNode.shuffle_count)
         ShuffleNode.shuffle_count += 1
-        super().__init__(ninputs, pnode, input_q, comp_length, output_size, in_neighbors, out_neighbors, state, LogicalNodeType.SHUFFLE, nid)
+        super().__init__(ninputs, pnode, input_q, comp_length, output_length, in_neighbors, out_neighbors, state, LogicalNodeType.SHUFFLE, nid)
 
     def schedulable(self):
         return (self.state is LogicalNodeState.NOT_SCHEDULED or self.state is LogicalNodeState.FAILED) and len(self.input_q) > 0
@@ -161,5 +168,4 @@ class Input:
 
     # Update the timestamp of this input to arrive at the physical node `pnode`
     def update_time(self, timer, pnode):
-        self.timestamp = timer.time_delta(self.size
-                                            * bandwidth(self.source, pnode))
+        self.timestamp = timer.delta(self.size * bandwidth(self.source, pnode))

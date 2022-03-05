@@ -4,21 +4,23 @@ class Timer:
         self.time = 0
 
     # Step forward once in time
-    def time_step(self):
+    def step(self):
         self.time += 1
 
-    # Has `time` already passed?
-    def time_passed(self, time):
-        return time <= self.time
-
-    # Return the current timestamp plus `delta` time (will be useful later to
-    # implement jumps forward)
-    def time_delta(self, delta):
-        end = self.time + delta
-        # if end < self.interesting_time:
-        #    self.interesting_time = end
-        return end
+    # Return the current timestamp plus `delta` time
+    def delta(self, delta):
+        return self.time + delta
 
     # Get the current time
-    def get_time(self):
+    def now(self):
         return self.time
+
+    # Has `time` already passed?
+    def passed(self, time):
+        return time <= self.time
+
+    # Return the time elapsed since `time`, or 0 if that time has yet to occur
+    def elapsed_since(self, time):
+        if self.passed(time):
+            return time - self.time
+        return 0
