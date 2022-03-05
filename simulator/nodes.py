@@ -4,17 +4,30 @@ import random
 
 # Constants that should later be configurable
 
-BANDWIDTH_MULTIPLIER = 1
-STRAGGLER_LENGTH_MULTIPLIER = 1
-COMP_LENGTH_MULTIPLIER = 1
-OUTPUT_LENGTH_MULTIPLIER = 1
-FAILURE_PROBABILITY = 0.001
+class Config:
+    BANDWIDTH_MULTIPLIER = 1
+    STRAGGLER_LENGTH_MULTIPLIER = 1
+    COMP_LENGTH_MULTIPLIER = 1
+    OUTPUT_LENGTH_MULTIPLIER = 1
+    FAILURE_PROBABILITY = 0.001
+    STRAGGLER_PROBABILITY = 0.001
+
+    @staticmethod
+    def reset():
+        '''
+            Function to reset the config
+        '''
+        Config.BANDWIDTH_MULTIPLIER = 1
+        Config.STRAGGLER_LENGTH_MULTIPLIER = 1
+        Config.COMP_LENGTH_MULTIPLIER = 1
+        Config.OUTPUT_LENGTH_MULTIPLIER = 1
+        Config.FAILURE_PROBABILITY = 0.001
+        Config.STRAGGLER_PROBABILITY = 0.001
 
 # Return the bandwidth multiplier from physical node1 to node2
 # For now, assume uniform bandwidth
 def bandwidth(node1, node2):
-    global BANDWIDTH_MULTIPLIER
-    return BANDWIDTH_MULTIPLIER
+    return Config.BANDWIDTH_MULTIPLIER
 
 
 # Logical Node state enum
@@ -35,9 +48,8 @@ class LogicalNodeType(Enum):
 # random chance for every node, but we could make it specific to certain sizes,
 # etc)
 def straggler_time(size):
-    global STRAGGLER_LENGTH_MULTIPLIER
-    if random() < (1/1000):
-        return STRAGGLER_LENGTH_MULTIPLIER * size
+    if random.random() < Config.STRAGGLER_PROBABILITY:
+        return Config.STRAGGLER_LENGTH_MULTIPLIER * size
     return 0
 
 # A function that returns a list of physical nodes that fail in the
@@ -48,23 +60,19 @@ def straggler_time(size):
 # For example, if FAILURE_PROBABILITY = 0.001 and t = 100, then approximately
 # 10% of the physical nodes will fail at some point.
 def failure(pnodes):
-    global FAILURE_PROBABILITY
     return [pn for pn in pnodes
-            if (not pn.failed) and random.random() < FAILURE_PROBABILITY]
+            if (not pn.failed) and random.random() < Config.FAILURE_PROBABILITY]
 
 # Default functions for computation time and output size (just the size for now)
 
 def default_comp_length(size):
-    global COMP_LENGTH_MULTIPLIER
-    return COMP_LENGTH_MULTIPLIER * size
+    return Config.COMP_LENGTH_MULTIPLIER * size + straggler_time(size)
 
 def comp_length_with_straggler(size):
-    global COMP_LENGTH_MULTIPLIER
-    return COMP_LENGTH_MULTIPLIER * size + straggler_time(size)
+    return Config.COMP_LENGTH_MULTIPLIER * size + straggler_time(size)
 
 def default_output_length(size):
-    global OUTPUT_LENGTH_MULTIPLIER
-    return OUTPUT_LENGTH_MULTIPLIER * size
+    return Config.OUTPUT_LENGTH_MULTIPLIER * size
 
 class LogicalNode:
     lnode_count = 0

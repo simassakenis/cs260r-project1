@@ -2,8 +2,16 @@ import unittest
 from simulator.nodes import LogicalNode, PhysicalNode, Input, MapNode, ReduceNode, ShuffleNode
 from simulator.mrscheduler import MRScheduler
 from simulator.simulator import simulate
+from simulator.nodes import Config
 
 class TestMRScheduler(unittest.TestCase):
+
+    def setUp(self):
+        Config.FAILURE_PROBABILITY = 0
+        Config.STRAGGLER_PROBABILITY = 0
+    
+    def tearDown(self):
+        Config.reset()
 
     def test_map_reduce_sch_1(self):
         '''
