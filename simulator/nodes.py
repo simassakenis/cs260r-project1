@@ -50,6 +50,7 @@ class LogicalNodeType(Enum):
 # etc)
 def straggler_time(size):
     if random.random() < Config.STRAGGLER_PROBABILITY:
+        # print('st: ', Config.STRAGGLER_LENGTH_MULTIPLIER * size)
         return Config.STRAGGLER_LENGTH_MULTIPLIER * size
     return 0
 
