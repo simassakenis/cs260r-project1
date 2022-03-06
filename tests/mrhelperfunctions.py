@@ -67,6 +67,18 @@ class MRHelperFunctions:
             reduce_nodes.append(ReduceNode())
 
         return reduce_nodes
+
+    @staticmethod
+    def create_shuffle_nodes(num_shuffle_nodes, out_len):
+        '''
+            Function to create shuffle nodes
+            num_shuffle_nodes: number of shuffle nodes
+        '''
+        shuffle_nodes = []
+        for i in range(num_shuffle_nodes):
+            shuffle_nodes.append(ShuffleNode(output_length = out_len))
+
+        return shuffle_nodes
     
     @staticmethod
     def create_physical_nodes(num_physical_nodes, compute_power_array, memory_array, bandwidth_array):
