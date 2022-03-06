@@ -78,4 +78,4 @@ def simulate(lnodes, pnodes, scheduler_class, verbose=True):
                 failed_lnodes.append(lnode)
             pnode.failed = True
 
-        timer.step(len(failed_lnodes) != 1 or len(completed_lnodes) != 1)
+        timer.step(len(failed_lnodes) > 0 or len(completed_lnodes) > 0)
