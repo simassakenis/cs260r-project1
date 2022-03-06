@@ -3,8 +3,9 @@ class Timer:
     def __init__(self):
         self.time = 0
 
-    # Step forward once in time
-    def step(self):
+    # Step forward in time - if `single`, then require the step be a single
+    # step (helpful to ensure something, like scheduling, happens right away)
+    def step(self, single):
         self.time += 1
 
     # Return the current timestamp plus `delta` time
