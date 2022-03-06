@@ -18,12 +18,13 @@ class MRScheduler:
             return scheduled_pairs
 
         # Scheduling shuffle node
-        shuffle_node = next(filter(lambda x: x.type == LogicalNodeType.SHUFFLE and x.schedulable(), logical_nodes), None)
-        if shuffle_node is not None and shuffle_node.schedulable():
-            best_physical_node = MRScheduler.find_best_physical_node(shuffle_node, remaining_physical_nodes)
-            if best_physical_node is not None:
-                scheduled_pairs.append((shuffle_node, best_physical_node))
-                remaining_physical_nodes.remove(best_physical_node)
+        shuffle_nodes = filter(lambda x: x.type == LogicalNodeType.SHUFFLE and x.schedulable(), logical_nodes)
+        for shuffle_node in shuffle_nodes:
+            if shuffle_node.schedulable() and len(remaining_physical_nodes) > 0:
+                best_physical_node = MRScheduler.find_best_physical_node(shuffle_node, remaining_physical_nodes)
+                if best_physical_node is not None:
+                    scheduled_pairs.append((shuffle_node, best_physical_node))
+                    remaining_physical_nodes.remove(best_physical_node)
 
         if len(remaining_physical_nodes) == 0:
             return scheduled_pairs
