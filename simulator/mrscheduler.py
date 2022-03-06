@@ -14,6 +14,8 @@ class MRScheduler:
 
         # List of all physical nodes not scheduled
         remaining_physical_nodes = list(filter(lambda x: x.schedulable(), physical_nodes))
+        if len(remaining_physical_nodes) == 0:
+            return scheduled_pairs
 
         # Scheduling shuffle node
         shuffle_node = next(filter(lambda x: x.type == LogicalNodeType.SHUFFLE and x.schedulable(), logical_nodes), None)
@@ -22,24 +24,33 @@ class MRScheduler:
             if best_physical_node is not None:
                 scheduled_pairs.append((shuffle_node, best_physical_node))
                 remaining_physical_nodes.remove(best_physical_node)
+
+        if len(remaining_physical_nodes) == 0:
+            return scheduled_pairs
         
         # Scheduling map nodes
         map_nodes = list(filter(lambda x: x.type == LogicalNodeType.MAP and x.schedulable(), logical_nodes))
         for map_node in map_nodes:
-            if map_node.schedulable():
+            if map_node.schedulable() and len(remaining_physical_nodes) > 0:
                 best_physical_node = MRScheduler.find_best_physical_node(map_node, remaining_physical_nodes)
                 if best_physical_node is not None:
                     scheduled_pairs.append((map_node, best_physical_node))
                     remaining_physical_nodes.remove(best_physical_node)
+
+        if len(remaining_physical_nodes) == 0:
+            return scheduled_pairs
         
         # Scheduling reduce nodes
         reduce_nodes = list(filter(lambda x: x.type == LogicalNodeType.REDUCE and x.schedulable(), logical_nodes))
         for reduce_node in reduce_nodes:
-            if reduce_node.schedulable():
+            if reduce_node.schedulable() and len(remaining_physical_nodes) > 0:
                 best_physical_node = MRScheduler.find_best_physical_node(reduce_node, remaining_physical_nodes)
                 if best_physical_node is not None:
                     scheduled_pairs.append((reduce_node, best_physical_node))
                     remaining_physical_nodes.remove(best_physical_node)
+
+        if len(remaining_physical_nodes) == 0:
+            return scheduled_pairs
 
         # Scheduling other nodes
         other_nodes = list(filter(lambda x: x.type == LogicalNodeType.OTHER and x.schedulable(), logical_nodes))

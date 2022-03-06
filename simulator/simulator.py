@@ -16,6 +16,7 @@ from simulator.timer import Timer
 import logging
 
 def simulate(lnodes, pnodes, scheduler_class, verbose=True):
+    fail_count = 0
     timer = Timer()
     while True:
         if verbose:
@@ -65,14 +66,23 @@ def simulate(lnodes, pnodes, scheduler_class, verbose=True):
                 done = False
 
         if done:
+            if verbose:
+                print('total fails: {}'.format(fail_count))
             return timer.now()
 
         failed_nodes = failure(pnodes)
         for pnode in failed_nodes:
+            if pnode.failed:
+                continue
             if pnode.lnode is not None:
                 for inp in pnode.lnode.input_q:
                     inp.timestamp = None
                 pnode.lnode.state = LogicalNodeState.FAILED
             pnode.failed = True
+            fail_count += 1
+            if verbose:
+                print('{} failed.'.format(pnode.id))
+                if(pnode.lnode is not None):
+                    print('{} aborted'.format(pnode.lnode.id))
 
         timer.step()
