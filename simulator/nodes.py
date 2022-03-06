@@ -26,8 +26,9 @@ class Config:
 
 # Return the bandwidth multiplier from physical node1 to node2
 # For now, assume uniform bandwidth
+# Latency is 0 from a node to itself
 def bandwidth(node1, node2):
-    return Config.BANDWIDTH_MULTIPLIER
+    return Config.BANDWIDTH_MULTIPLIER if node1 is not node2 else 0
 
 
 # Logical Node state enum

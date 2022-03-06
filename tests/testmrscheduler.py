@@ -46,7 +46,7 @@ class TestMRScheduler(unittest.TestCase):
         total_time = simulate(logical_nodes, physical_nodes, MRScheduler)
 
         print("Total time: ",total_time)
-        self.assertEqual(total_time, 7)
+        self.assertEqual(total_time, 6)
 
     
     def test_map_reduce_sch_2(self):

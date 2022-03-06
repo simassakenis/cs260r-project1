@@ -32,7 +32,7 @@ class MapReduceTest(unittest.TestCase):
 
         total_time = simulate(logical_nodes, [physical_node], SimpleQueueScheduler)
         print("Total time: ",total_time)
-        self.assertEqual(total_time, 4)
+        self.assertEqual(total_time, 3)
     
     def test_map_reduce_2(self):
         '''
@@ -59,7 +59,7 @@ class MapReduceTest(unittest.TestCase):
 
         total_time = simulate(logical_nodes, [physical_node], SimpleQueueScheduler)
         print("Total time: ",total_time)
-        self.assertEqual(total_time, 7)
+        self.assertEqual(total_time, 5)
 
     def test_map_reduce_3(self):
         '''
@@ -86,7 +86,7 @@ class MapReduceTest(unittest.TestCase):
 
         total_time = simulate(logical_nodes, [physical_node], SimpleQueueScheduler)
         print("Total time: ",total_time)
-        self.assertEqual(total_time, 10)
+        self.assertEqual(total_time, 7)
 
     def test_map_reduce_4(self):
         '''
@@ -114,7 +114,7 @@ class MapReduceTest(unittest.TestCase):
 
         total_time = simulate(logical_nodes, [physical_node], SimpleQueueScheduler)
         print("Total time: ",total_time)
-        self.assertEqual(total_time, 11)
+        self.assertEqual(total_time, 9)
 
 
 
