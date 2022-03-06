@@ -24,3 +24,7 @@ class Timer:
         if self.passed(time):
             return self.time - time
         return 0
+
+    # Return the time elapsed since the last call to step
+    def elapsed(self):
+        return 1

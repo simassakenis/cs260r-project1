@@ -52,14 +52,16 @@ def straggler_time(size):
         return Config.STRAGGLER_LENGTH_MULTIPLIER * size
     return 0
 
-# A function that returns a list of physical nodes that fail in the
-# current timestep. At every timestep, each physical node may fail with
+# A function that returns a list of physical nodes that failed in the time
+# interval `time`. At every timestep, each physical node may fail with
 # probability FAILURE_PROBABILITY (node failures are independent). If the
 # total execution time is t, the fraction of physical nodes that will fail is
 # 1 - (1 - FAILURE_PROBABILITY) ** t.
 # For example, if FAILURE_PROBABILITY = 0.001 and t = 100, then approximately
 # 10% of the physical nodes will fail at some point.
-def failure(pnodes):
+# TODO actually use `time`; I believe it may be random.random() <
+# (1 - Config.FAILURE_PROBABILITY) ** time, but I'm not sure
+def failure(pnodes, time):
     return [pn for pn in pnodes
             if (not pn.failed) and random.random() < Config.FAILURE_PROBABILITY]
 

@@ -2,11 +2,13 @@ from simulator.nodes import LogicalNode, PhysicalNode, LogicalNodeState, Logical
 
 class MRScheduler:
     @staticmethod
-    def schedule(logical_nodes: list[LogicalNode], physical_nodes: list[PhysicalNode]):
+    def schedule(logical_nodes: list[LogicalNode], physical_nodes: list[PhysicalNode], completed_nodes: list[LogicalNode] = [], failed_nodes: list[LogicalNode] = []):
         '''
             Function to schedule the logical nodes to physical nodes
             logical_nodes: list of logical nodes to schedule
             physical_nodes: list of physical nodes to schedule to
+            completed_nodes: list of logical nodes that completed in the last loop iteration
+            failed_nodes: list of logical nodes that failed in the last loop iteration
         '''
 
         # Scheduling will be different here. Start with shuffle node, if it can be scheduled, then schedule map nodes, then reduce nodes.
@@ -22,7 +24,7 @@ class MRScheduler:
             if best_physical_node is not None:
                 scheduled_pairs.append((shuffle_node, best_physical_node))
                 remaining_physical_nodes.remove(best_physical_node)
-        
+
         # Scheduling map nodes
         map_nodes = list(filter(lambda x: x.type == LogicalNodeType.MAP and x.schedulable(), logical_nodes))
         for map_node in map_nodes:
@@ -31,7 +33,7 @@ class MRScheduler:
                 if best_physical_node is not None:
                     scheduled_pairs.append((map_node, best_physical_node))
                     remaining_physical_nodes.remove(best_physical_node)
-        
+
         # Scheduling reduce nodes
         reduce_nodes = list(filter(lambda x: x.type == LogicalNodeType.REDUCE and x.schedulable(), logical_nodes))
         for reduce_node in reduce_nodes:
@@ -49,7 +51,7 @@ class MRScheduler:
                 if best_physical_node is not None:
                     scheduled_pairs.append((other_node, best_physical_node))
                     remaining_physical_nodes.remove(best_physical_node)
-        
+
         return scheduled_pairs
 
     @staticmethod

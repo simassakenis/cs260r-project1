@@ -9,18 +9,19 @@
 # timestep, the simulator observes the current state of the
 # system and determines the next state.
 
-from simulator.simplequeuescheduler import SimpleQueueScheduler
-from simulator.mrscheduler import MRScheduler
 from simulator.nodes import LogicalNode, PhysicalNode, Input, LogicalNodeState, LogicalNodeType, MapNode, ReduceNode, ShuffleNode, failure
 from simulator.timer import Timer
-import logging
 
 def simulate(lnodes, pnodes, scheduler_class, verbose=True):
     timer = Timer()
+    completed_lnodes = []
+    failed_lnodes = []
     while True:
         if verbose:
             print('Current time: {}'.format(timer.now()))
-        node_assignments = scheduler_class.schedule(lnodes, pnodes)
+        node_assignments = scheduler_class.schedule(lnodes, pnodes, completed_lnodes, failed_lnodes)
+        completed_lnodes.clear()
+        failed_lnodes.clear()
         for lnode, pnode in node_assignments:
             assert lnode.schedulable()
             assert pnode.schedulable()
@@ -60,6 +61,7 @@ def simulate(lnodes, pnodes, scheduler_class, verbose=True):
                         node.input_q.append(inp)
                     lnode.pnode.lnode = None
                     lnode.state = LogicalNodeState.COMPLETED
+                    completed_lnodes.append(lnode)
 
             if lnode.state != LogicalNodeState.COMPLETED:
                 done = False
@@ -67,12 +69,13 @@ def simulate(lnodes, pnodes, scheduler_class, verbose=True):
         if done:
             return timer.now()
 
-        failed_nodes = failure(pnodes)
+        failed_nodes = failure(pnodes, timer.elapsed())
         for pnode in failed_nodes:
             if pnode.lnode is not None:
                 for inp in pnode.lnode.input_q:
                     inp.timestamp = None
                 pnode.lnode.state = LogicalNodeState.FAILED
+                failed_lnodes.append(lnode)
             pnode.failed = True
 
         timer.step()
