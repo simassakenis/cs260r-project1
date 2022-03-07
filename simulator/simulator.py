@@ -89,11 +89,11 @@ def simulate(lnodes, pnodes, scheduler_class, verbose=True):
                     print('{} aborted'.format(pnode.lnode.id))
 
         # find all running nodes
-        running_nodes = list(filter(lambda x: x.state is LogicalNodeState.COMPUTING or x.state is LogicalNodeState.NEED_INPUT, lnodes))
-        m_running_nodes = len(list(filter(lambda x: x.type is LogicalNodeType.MAP, running_nodes)))
-        s_running_nodes = len(list(filter(lambda x: x.type is LogicalNodeType.SHUFFLE, running_nodes)))
-        r_running_nodes = len(list(filter(lambda x: x.type is LogicalNodeType.REDUCE, running_nodes)))
+        # running_nodes = list(filter(lambda x: x.state is LogicalNodeState.COMPUTING or x.state is LogicalNodeState.NEED_INPUT, lnodes))
+        # m_running_nodes = len(list(filter(lambda x: x.type is LogicalNodeType.MAP, running_nodes)))
+        # s_running_nodes = len(list(filter(lambda x: x.type is LogicalNodeType.SHUFFLE, running_nodes)))
+        # r_running_nodes = len(list(filter(lambda x: x.type is LogicalNodeType.REDUCE, running_nodes)))
 
-        print('{}, {}, {}'.format(m_running_nodes, s_running_nodes, r_running_nodes))
+        # print('{}, {}, {}'.format(m_running_nodes, s_running_nodes, r_running_nodes))
 
         timer.step(len(failed_lnodes) > 0 or len(completed_lnodes) > 0)

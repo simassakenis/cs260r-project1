@@ -22,6 +22,8 @@ class Benchmarks(unittest.TestCase):
         memory = 4000
         bandwidth = 1000
 
+        node_init_time = 60
+
         Config.STRAGGLER_PROBABILITY = 0
         Config.FAILURE_PROBABILITY = 0
         Config.BANDWIDTH_MULTIPLIER = 1/1000
@@ -67,7 +69,7 @@ class Benchmarks(unittest.TestCase):
 
         total_time = simulate(logical_nodes, physical_nodes, MRScheduler)
 
-        print("Total time: ",total_time)
+        print("Total time including initialization: ",total_time + node_init_time)
 
     
     def test_map_reduce_grep_with_failure(self):
@@ -75,6 +77,8 @@ class Benchmarks(unittest.TestCase):
         compute_power = 1/16
         memory = 4000
         bandwidth = 1000
+
+        node_init_time = 60
 
         Config.STRAGGLER_PROBABILITY = 0
         Config.FAILURE_PROBABILITY = 0.001
@@ -121,7 +125,7 @@ class Benchmarks(unittest.TestCase):
 
         total_time = simulate(logical_nodes, physical_nodes, MRScheduler)
 
-        print("Total time: ",total_time)
+        print("Total time including initialization: ",total_time + node_init_time)
 
     
     def test_map_reduce_grep_with_failure_straggler(self):
@@ -129,6 +133,8 @@ class Benchmarks(unittest.TestCase):
         compute_power = 1/16
         memory = 4000
         bandwidth = 1000
+
+        node_init_time = 60
 
         Config.STRAGGLER_PROBABILITY = 0.001
         Config.STRAGGLER_LENGTH_MULTIPLIER = 2
@@ -176,7 +182,7 @@ class Benchmarks(unittest.TestCase):
 
         total_time = simulate(logical_nodes, physical_nodes, MRScheduler)
 
-        print("Total time: ",total_time)
+        print("Total time including initialization: ",total_time + node_init_time)
 
 
     def test_map_reduce_sort(self):
@@ -290,7 +296,7 @@ class Benchmarks(unittest.TestCase):
         num_shuffle_nodes = 1800
 
         def shuffle_comp_length(input_size):
-            return (input_size*compute_power) + (straggler_time(input_size)/5)
+            return (input_size*compute_power) + (straggler_time(input_size))
 
         def shuffle_out_length(input_size):
             return input_size
@@ -307,7 +313,7 @@ class Benchmarks(unittest.TestCase):
         num_reduce_nodes = num_shuffle_nodes
 
         def reduce_comp_length(input_size):
-            return ((input_size/num_shuffle_nodes)*compute_power) + (straggler_time(input_size/num_shuffle_nodes)/5)
+            return ((input_size/num_shuffle_nodes)*compute_power) + (straggler_time(input_size/num_shuffle_nodes))
 
         def reduce_out_length(input_size):
             return input_size/num_shuffle_nodes
@@ -369,7 +375,7 @@ class Benchmarks(unittest.TestCase):
         num_shuffle_nodes = 1800
 
         def shuffle_comp_length(input_size):
-            return (input_size*compute_power) + (straggler_time(input_size)/5)
+            return (input_size*compute_power) + (straggler_time(input_size))
 
         def shuffle_out_length(input_size):
             return input_size
@@ -386,7 +392,7 @@ class Benchmarks(unittest.TestCase):
         num_reduce_nodes = num_shuffle_nodes
 
         def reduce_comp_length(input_size):
-            return ((input_size/num_shuffle_nodes)*compute_power) + (straggler_time(input_size/num_shuffle_nodes)/5)
+            return ((input_size/num_shuffle_nodes)*compute_power) + (straggler_time(input_size/num_shuffle_nodes))
 
         def reduce_out_length(input_size):
             return input_size/num_shuffle_nodes
