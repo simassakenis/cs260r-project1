@@ -1,8 +1,9 @@
 import unittest
-from tests.mrhelperfunctions import MRHelperFunctions
+from mrhelperfunctions import MRHelperFunctions
 from simulator.nodes import Config, straggler_time
 from simulator.simulator import simulate
 from simulator.mrscheduler import MRScheduler
+from simulator.daskscheduler import DaskScheduler
 
 class Benchmarks(unittest.TestCase):
     '''
@@ -118,7 +119,7 @@ class Benchmarks(unittest.TestCase):
 
         total_time = simulate(logical_nodes, physical_nodes, MRScheduler)
 
-        print("Total time: ",total_time)
+        print("Map Reduce Total time: ",total_time)
 
     
     def test_map_reduce_grep_with_failure_straggler(self):
@@ -173,7 +174,8 @@ class Benchmarks(unittest.TestCase):
 
         total_time = simulate(logical_nodes, physical_nodes, MRScheduler)
 
-        print("Total time: ",total_time)
+        print("Map Reduce Total time: ",total_time)
+
 
 
     def test_map_reduce_sort(self):
