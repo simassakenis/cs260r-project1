@@ -22,9 +22,7 @@ class TestDaskBenchmark(unittest.TestCase):
         memory = 4000
         bandwidth = 1000
 
-        Config.STRAGGLER_PROBABILITY = 0
         Config.STRAGGLER_LENGTH_MULTIPLIER = 2
-        Config.FAILURE_PROBABILITY = 0
         Config.BANDWIDTH_MULTIPLIER = 1/1000
 
         physical_nodes = MRHelperFunctions.create_physical_nodes(num_physical_nodes, 
