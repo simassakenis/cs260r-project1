@@ -6,15 +6,29 @@ import random
 
 class Cluster:
     def __init__(self, pnodes, bandwidth, latency):
-        self.physical_nodes = []
-        self.bandwidth = null
-        self.latency = null
+        self.physical_nodes = pnodes
+        self.bandwidth = bandwidth
+        self.latency = latency
 
-    def bandwidth_between(self, pnode1, pnode2):
-        return self.bandwidth[pnode1][pnode2]
+    def get_bandwidth(self, pnode1, pnode2):
+        if (pnode1, pnode2) in self.bandwidth:
+            return self.bandwidth[(pnode1, pnode2)]
+        else:
+            return self.bandwidth[(pnode2, pnode1)]
     
-    def latency_between(self, pnode1, pnode2):
-        return self.latency[pnode1][pnode2]
+    def get_latency(self, pnode1, pnode2):
+        return self.latency[(pnode1, pnode2)]
+
+    @staticmethod
+    def default_cluster():
+        pnodes=[PhysicalNode(compute_power=1, memory=10) for i in range(0, 3)]
+        bandwidth = {}
+        latency = {}
+        for pnode1 in pnodes:
+            for pnode2 in pnodes:
+                bandwidth[(pnode1, pnode2)] = float("inf") if pnode1 == pnode2 else 1
+                latency[(pnode1, pnode2)] = 0 if pnode1 == pnode2 else 0.1
+        return Cluster(pnodes, bandwidth, latency)
 
 class Config:
     BANDWIDTH_MULTIPLIER = 1
@@ -40,7 +54,7 @@ class Config:
 # For now, assume uniform bandwidth
 # Latency is 0 from a node to itself
 def bandwidth(node1, node2):
-    return Config.BANDWIDTH_MULTIPLIER if node1 is not node2 else 0
+    return Config.BANDWIDTH_MULTIPLIER if node1 is not node2 else float("inf")
 
 
 # Logical Node state enum
@@ -184,12 +198,11 @@ class ShuffleNode(LogicalNode):
 class PhysicalNode:
     pnode_count = 0
     def __init__(self, compute_power=None, memory=None,
-                bandwidth=None, lnode=None, failed=False):
+                 lnode=None, failed=False):
         self.id = 'pnode_' + str(PhysicalNode.pnode_count)
         PhysicalNode.pnode_count += 1
         self.compute_power = compute_power
         self.memory = memory
-        self.bandwidth = bandwidth
         self.lnode = lnode
         self.failed = failed
 
@@ -213,5 +226,7 @@ class Input:
         self.to_pnode = pnode
 
     # Update the timestamp of this input to arrive at the physical node `pnode`
-    def update_time(self, timer):
-        self.timestamp = timer.delta(self.size / bandwidth(self.from_pnode, self.to_pnode))
+    def update_time(self, timer, cluster):
+        time = max(self.size / cluster.get_bandwidth(self.from_pnode, self.to_pnode),
+                   cluster.get_latency(self.from_pnode, self.to_pnode))
+        self.timestamp = timer.delta(time)

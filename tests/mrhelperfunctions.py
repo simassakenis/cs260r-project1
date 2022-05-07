@@ -95,6 +95,6 @@ class MRHelperFunctions:
 
         physical_nodes = []
         for i in range(num_physical_nodes):
-            physical_node = PhysicalNode(compute_power=compute_power_array[i], memory=memory_array[i], bandwidth=bandwidth_array[i])
+            physical_node = PhysicalNode(compute_power=compute_power_array[i], memory=memory_array[i])
             physical_nodes.append(physical_node)
         return physical_nodes

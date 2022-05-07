@@ -1,8 +1,10 @@
 import unittest
 from tests.mrhelperfunctions import MRHelperFunctions
-from simulator.nodes import Config, straggler_time
+from simulator.nodes import Config, straggler_time, Cluster
 from simulator.simulator import simulate
 from simulator.mrscheduler import MRScheduler
+from collections import defaultdict
+import random
 
 class Benchmarks(unittest.TestCase):
     '''
@@ -194,7 +196,8 @@ class Benchmarks(unittest.TestCase):
         Config.STRAGGLER_PROBABILITY = 0
         Config.STRAGGLER_LENGTH_MULTIPLIER = 2
         Config.FAILURE_PROBABILITY = 0
-        Config.BANDWIDTH_MULTIPLIER = 1/1000
+        #Config.BANDWIDTH_MULTIPLIER = 1/1000
+        Config.BANDWIDTH_MULTIPLIER = 1000
 
         physical_nodes = MRHelperFunctions.create_physical_nodes(num_physical_nodes, 
             [compute_power]*num_physical_nodes, 
@@ -257,7 +260,12 @@ class Benchmarks(unittest.TestCase):
         logical_nodes.extend(shuffle_nodes)
         logical_nodes.extend(reduce_nodes)
 
-        total_time = simulate(logical_nodes, physical_nodes, MRScheduler, False)
+        bandwidth = defaultdict(lambda: random.uniform(1, 2))
+        latency = defaultdict(lambda: random.uniform(0.1, 0.2))
+
+        cluster = Cluster(physical_nodes, bandwidth, latency)
+
+        total_time = simulate(logical_nodes, physical_nodes, MRScheduler, cluster, True)
 
         print("Total time: ",total_time)
 

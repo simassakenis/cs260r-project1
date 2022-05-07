@@ -9,10 +9,10 @@
 # timestep, the simulator observes the current state of the
 # system and determines the next state.
 
-from simulator.nodes import LogicalNode, PhysicalNode, Input, LogicalNodeState, LogicalNodeType, MapNode, ReduceNode, ShuffleNode, failure
+from simulator.nodes import LogicalNode, PhysicalNode, Input, LogicalNodeState, LogicalNodeType, MapNode, ReduceNode, ShuffleNode, failure, Cluster
 from simulator.timer import Timer
 
-def simulate(lnodes, pnodes, scheduler_class, verbose=True):
+def simulate(lnodes, pnodes, scheduler_class, cluster=Cluster.default_cluster(), verbose=True):
     fail_count = 0
     timer = Timer()
     completed_lnodes = []
@@ -36,7 +36,7 @@ def simulate(lnodes, pnodes, scheduler_class, verbose=True):
                 # if the timestamp is none, then it is just being scheduled. 
                 if inp.timestamp == None:
                     inp.set_to_pnode(pnode)
-                    inp.update_time(timer)
+                    inp.update_time(timer, cluster)
             lnode.state = LogicalNodeState.NEED_INPUT
 
         for lnode in lnodes:
@@ -67,7 +67,7 @@ def simulate(lnodes, pnodes, scheduler_class, verbose=True):
                         # if the out_neighbor is already scheduled, then set the input's timestamp for transmission
                         if node.pnode is not None:
                             inp.set_to_pnode(node.pnode)
-                            inp.update_time(timer)
+                            inp.update_time(timer, cluster)
                         node.input_q.append(inp)
                     lnode.pnode.lnode = None
                     lnode.state = LogicalNodeState.COMPLETED
