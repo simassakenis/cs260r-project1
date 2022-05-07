@@ -4,6 +4,18 @@ import random
 
 # Constants that should later be configurable
 
+class Cluster:
+    def __init__(self, pnodes, bandwidth, latency):
+        self.physical_nodes = []
+        self.bandwidth = null
+        self.latency = null
+
+    def bandwidth_between(self, pnode1, pnode2):
+        return self.bandwidth[pnode1][pnode2]
+    
+    def latency_between(self, pnode1, pnode2):
+        return self.latency[pnode1][pnode2]
+
 class Config:
     BANDWIDTH_MULTIPLIER = 1
     STRAGGLER_LENGTH_MULTIPLIER = 1
@@ -186,11 +198,20 @@ class PhysicalNode:
         return self.lnode is None and not self.failed
 
 class Input:
-    def __init__(self, size=None, timestamp=None, source=None):
+    def __init__(self, size=None, timestamp=None, from_lnode=None, to_lnode=None):
         self.size = size
         self.timestamp = timestamp
-        self.source = source
+        self.from_lnode = from_lnode
+        self.to_lnode = to_lnode
+        self.from_pnode = None
+        self.to_pnode = None
+
+    def set_from_pnode(self, pnode):
+        self.from_pnode = pnode
+    
+    def set_to_pnode(self, pnode):
+        self.to_pnode = pnode
 
     # Update the timestamp of this input to arrive at the physical node `pnode`
-    def update_time(self, timer, pnode):
-        self.timestamp = timer.delta(self.size * bandwidth(self.source, pnode))
+    def update_time(self, timer):
+        self.timestamp = timer.delta(self.size / bandwidth(self.from_pnode, self.to_pnode))

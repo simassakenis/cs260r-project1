@@ -31,9 +31,12 @@ def simulate(lnodes, pnodes, scheduler_class, verbose=True):
             lnode.pnode = pnode
             pnode.lnode = lnode
             lnode.schedule_time = timer.now()
+
             for inp in lnode.input_q:
+                # if the timestamp is none, then it is just being scheduled. 
                 if inp.timestamp == None:
-                    inp.update_time(timer, pnode)
+                    inp.set_to_pnode(pnode)
+                    inp.update_time(timer)
             lnode.state = LogicalNodeState.NEED_INPUT
 
         for lnode in lnodes:
@@ -56,9 +59,15 @@ def simulate(lnodes, pnodes, scheduler_class, verbose=True):
                     if verbose:
                         print('{} finished computing'.format(lnode.id))
                     for node in lnode.out_neighbors:
-                        inp = Input(lnode.output_size, None, lnode.pnode)
+                        # for each of the out neighbors of the current node,
+                        # add the current node's output to the input queue of the neighbor
+                        inp = Input(lnode.output_size, None, lnode, node)
+                        inp.set_from_pnode(lnode.pnode)
+
+                        # if the out_neighbor is already scheduled, then set the input's timestamp for transmission
                         if node.pnode is not None:
-                            inp.update_time(timer, node.pnode)
+                            inp.set_to_pnode(node.pnode)
+                            inp.update_time(timer)
                         node.input_q.append(inp)
                     lnode.pnode.lnode = None
                     lnode.state = LogicalNodeState.COMPLETED
