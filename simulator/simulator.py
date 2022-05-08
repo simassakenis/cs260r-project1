@@ -39,6 +39,8 @@ def simulate(lnodes, pnodes, scheduler_class, cluster=Cluster.default_cluster(),
                     inp.set_to_pnode(pnode)
                     inp.update_time(timer, cluster)
                     lnode.update_max(inp.timestamp)
+                timer.add_to_queue(inp.timestamp)
+            timer.add_to_queue(lnode.max_input_time)
             lnode.state = LogicalNodeState.NEED_INPUT
 
         for lnode in lnodes:
@@ -53,6 +55,7 @@ def simulate(lnodes, pnodes, scheduler_class, cluster=Cluster.default_cluster(),
                         lnode.comp_end_time = timer.delta(remaining_computation_time)
                     else:
                         lnode.comp_end_time = timer.delta(lnode.comp_time)
+                    timer.add_to_queue(lnode.comp_end_time)
                     lnode.comp_start_time = timer.now()
                     lnode.state = LogicalNodeState.COMPUTING
 
@@ -71,6 +74,7 @@ def simulate(lnodes, pnodes, scheduler_class, cluster=Cluster.default_cluster(),
                             inp.set_to_pnode(node.pnode)
                             inp.update_time(timer, cluster)
                             node.update_max(inp.timestamp)
+                            timer.add_to_queue(inp.timestamp)
                         node.input_q.append(inp)
                     lnode.pnode.lnode = None
                     lnode.state = LogicalNodeState.COMPLETED
@@ -107,5 +111,6 @@ def simulate(lnodes, pnodes, scheduler_class, cluster=Cluster.default_cluster(),
         # r_running_nodes = len(list(filter(lambda x: x.type is LogicalNodeType.REDUCE, running_nodes)))
 
         # print('{}, {}, {}'.format(m_running_nodes, s_running_nodes, r_running_nodes))
-
-        timer.step(len(failed_lnodes) > 0 or len(completed_lnodes) > 0)
+        if verbose:
+            print('next time step: {}'.format(timer.get_next_time()))
+        timer.forward_to_next_time_in_queue()

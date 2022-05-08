@@ -129,6 +129,7 @@ class LogicalNode:
         self.comp_start_time = None
         self.comp_end_time = None
         self.max_input_time = -1
+        self.min_input_time = -1
 
     @property
     def input_size(self):
@@ -157,6 +158,9 @@ class LogicalNode:
     def update_max(self, timestamp):
         if timestamp > self.max_input_time:
             self.max_input_time = timestamp
+    def update_min(self, timestamp):
+        if timestamp < self.min_input_time:
+            self.min_input_time = timestamp
 
 class MapNode(LogicalNode):
     map_count = 0
@@ -203,7 +207,7 @@ class ShuffleNode(LogicalNode):
 class PhysicalNode:
     pnode_count = 0
     def __init__(self, compute_power=None, memory=None,
-                 lnode=None, failed=False):
+                lnode=None, failed=False):
         self.id = 'pnode_' + str(PhysicalNode.pnode_count)
         PhysicalNode.pnode_count += 1
         self.compute_power = compute_power
