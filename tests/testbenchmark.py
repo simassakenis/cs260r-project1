@@ -260,7 +260,7 @@ class Benchmarks(unittest.TestCase):
         logical_nodes.extend(shuffle_nodes)
         logical_nodes.extend(reduce_nodes)
 
-        bandwidth = defaultdict(lambda: random.uniform(1, 2))
+        bandwidth = defaultdict(lambda: random.uniform(1000, 1500))
         latency = defaultdict(lambda: random.uniform(0.1, 0.2))
 
         cluster = Cluster(physical_nodes, bandwidth, latency)

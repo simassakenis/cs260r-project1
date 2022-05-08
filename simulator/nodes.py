@@ -128,6 +128,7 @@ class LogicalNode:
         self.schedule_time = None
         self.comp_start_time = None
         self.comp_end_time = None
+        self.max_input_time = -1
 
     @property
     def input_size(self):
@@ -152,6 +153,10 @@ class LogicalNode:
     # Are all the inputs present for this logical node (not necessarily arrived)
     def inputs_present(self):
         return len(self.input_q) == self.ninputs
+
+    def update_max(self, timestamp):
+        if timestamp > self.max_input_time:
+            self.max_input_time = timestamp
 
 class MapNode(LogicalNode):
     map_count = 0

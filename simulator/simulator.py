@@ -21,6 +21,7 @@ def simulate(lnodes, pnodes, scheduler_class, cluster=Cluster.default_cluster(),
         if verbose:
             print('Current time: {}'.format(timer.now()))
         node_assignments = scheduler_class.schedule(lnodes, pnodes, completed_lnodes, failed_lnodes)
+        
         completed_lnodes.clear()
         failed_lnodes.clear()
         for lnode, pnode in node_assignments:
@@ -37,12 +38,13 @@ def simulate(lnodes, pnodes, scheduler_class, cluster=Cluster.default_cluster(),
                 if inp.timestamp == None:
                     inp.set_to_pnode(pnode)
                     inp.update_time(timer, cluster)
+                    lnode.update_max(inp.timestamp)
             lnode.state = LogicalNodeState.NEED_INPUT
 
         for lnode in lnodes:
             done = True
             if lnode.state is LogicalNodeState.NEED_INPUT:
-                if (lnode.inputs_present() and all([timer.passed(inp.timestamp) for inp in lnode.input_q])):
+                if (lnode.inputs_present() and timer.passed(lnode.max_input_time)):
                     if verbose:
                         print('{} now computing'.format(lnode.id))
                     if lnode.type is LogicalNodeType.SHUFFLE:
@@ -68,6 +70,7 @@ def simulate(lnodes, pnodes, scheduler_class, cluster=Cluster.default_cluster(),
                         if node.pnode is not None:
                             inp.set_to_pnode(node.pnode)
                             inp.update_time(timer, cluster)
+                            node.update_max(inp.timestamp)
                         node.input_q.append(inp)
                     lnode.pnode.lnode = None
                     lnode.state = LogicalNodeState.COMPLETED
