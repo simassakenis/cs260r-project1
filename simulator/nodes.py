@@ -233,5 +233,5 @@ class Input:
     # Update the timestamp of this input to arrive at the physical node `pnode`
     def update_time(self, timer, cluster):
         time = max(self.size / cluster.get_bandwidth(self.from_pnode, self.to_pnode),
-                   cluster.get_latency(self.from_pnode, self.to_pnode))
+                cluster.get_latency(self.from_pnode, self.to_pnode))
         self.timestamp = timer.delta(time)
