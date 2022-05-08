@@ -1,5 +1,5 @@
 import unittest
-from tests.finalhelpfunctions import MRHelperFunctions
+from tests.finalhelpfunctions import FinalHelperFunctions
 from simulator.nodes import Config, straggler_time, Cluster
 from simulator.simulator import simulate
 from simulator.mrscheduler import MRScheduler
@@ -22,22 +22,23 @@ class TestFinalBenchmarks(unittest.TestCase):
 
     def test_map_reduce_sort(self):
         num_physical_nodes = 1800*4
-        compute_power = 1/2
+        compute_power = (1/2)
         memory = 4000
-        bandwidth = 1000
+        bandwidth = 1000/10
 
         Config.STRAGGLER_PROBABILITY = 0
         Config.STRAGGLER_LENGTH_MULTIPLIER = 2
         Config.FAILURE_PROBABILITY = 0
-        Config.BANDWIDTH_MULTIPLIER = 1000
+        Config.BANDWIDTH_MULTIPLIER = 1000/10
 
-        physical_nodes = MRHelperFunctions.create_physical_nodes(num_physical_nodes, 
+        physical_nodes = FinalHelperFunctions.create_physical_nodes(num_physical_nodes, 
             [compute_power]*num_physical_nodes, 
             [memory]*num_physical_nodes, 
             [bandwidth]*num_physical_nodes)
 
         num_map_nodes = 15000
-        map_input_size = 64
+        map_input_size = 640
+        variation = 4
         map_assign_time = 1
 
         def map_output_size(input_size):
@@ -46,7 +47,10 @@ class TestFinalBenchmarks(unittest.TestCase):
         def map_compute_length(input_size):
             return (map_input_size*compute_power)*2 + map_assign_time
 
-        map_nodes = MRHelperFunctions.create_map_nodes(num_map_nodes, [map_input_size]*num_map_nodes)
+        # map input sizes
+        map_input_sizes = [random.randint(map_input_size - variation, map_input_size + variation) for i in range(num_map_nodes)]
+
+        map_nodes = FinalHelperFunctions.create_map_nodes(num_map_nodes, map_input_sizes)
 
         # Add pnoed for map_nodes input
         map_split = TestFinalBenchmarks.split(map_nodes, num_physical_nodes)
@@ -66,7 +70,7 @@ class TestFinalBenchmarks(unittest.TestCase):
         def shuffle_out_length(input_size):
             return input_size
         
-        shuffle_nodes = MRHelperFunctions.create_shuffle_nodes(num_shuffle_nodes, shuffle_out_length)
+        shuffle_nodes = FinalHelperFunctions.create_shuffle_nodes(num_shuffle_nodes, shuffle_out_length)
         split_map_nodes = TestFinalBenchmarks.split(map_nodes, num_shuffle_nodes)
         for shuffle_node, split in zip(shuffle_nodes, split_map_nodes):
             shuffle_node.comp_length = shuffle_comp_length
@@ -83,7 +87,7 @@ class TestFinalBenchmarks(unittest.TestCase):
         def reduce_out_length(input_size):
             return input_size/num_shuffle_nodes
 
-        reduce_nodes = MRHelperFunctions.create_reduce_nodes(num_reduce_nodes)
+        reduce_nodes = FinalHelperFunctions.create_reduce_nodes(num_reduce_nodes)
 
         # connect reduce nodes all shuffle nodes
         for reduce_node in reduce_nodes:
@@ -98,8 +102,8 @@ class TestFinalBenchmarks(unittest.TestCase):
         logical_nodes.extend(shuffle_nodes)
         logical_nodes.extend(reduce_nodes)
 
-        bandwidth = defaultdict(lambda: random.uniform(1000, 1500))
-        latency = defaultdict(lambda: random.uniform(0.1, 0.2))
+        bandwidth = defaultdict(lambda: random.uniform(100, 150))
+        latency = defaultdict(lambda: random.uniform(1, 2))
 
         cluster = Cluster(physical_nodes, bandwidth, latency)
 

@@ -1,6 +1,6 @@
 from simulator.nodes import *
 
-class MRHelperFunctions:
+class FinalHelperFunctions:
     @staticmethod
     def create_map_reduce_graph(num_map_nodes, input_map_sizes, num_reduce_nodes):
         '''
